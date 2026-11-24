@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+*.zip
+capturas/geo_manifest.json
+cenarios/layout_atual.json
+.DS_Store
+Thumbs.db

@@ -1,0 +1,30 @@
+=====================================================================
+  MARACAJU 3D — COMO RODAR EM CASA (CELULAR OU OUTRO COMPUTADOR)
+=====================================================================
+
+OPCAO 1 — NO CELULAR HOJE MESMO (10 SEGUNDOS, SEM INSTALAR NADA!):
+  1. Abra https://app.netlify.com/drop no navegador (pode ser agora no trabalho).
+  2. Arraste APENAS a pasta "app" (que esta dentro deste pacote) para a pagina.
+  3. Em 10 segundos ele gera um link seguro https://...netlify.app
+  4. Mande esse link no seu WhatsApp -> abra no celular em casa!
+     (No link HTTPS funcionam: GPS ao vivo no quintal, camera direta para
+      o muro, simulador solar 3D, importacao de scans .glb e exportacao PNG!)
+
+OPCAO 2 — LINK PERMANENTE NO SEU GITHUB PAGES (matheusdochapeu-hub.github.io):
+  1. Crie um repositorio "maracaju-3d" no seu GitHub (publico).
+  2. Suba o conteudo da pasta "app/" na raiz do repositorio.
+  3. Em Settings -> Pages -> Deploy from branch "main" -> pronto!
+     Seu link fixo sera: https://matheusdochapeu-hub.github.io/maracaju-3d/
+
+OPCAO 3 — EM QUALQUER COMPUTADOR WINDOWS EM CASA (OFFLINE, 1 CLIQUE):
+  1. Extraia o arquivo "maracaju-3d-portatil.zip" em qualquer pasta.
+  2. De DUPLO CLIQUE em "ABRIR_MARACAJU_3D.bat".
+     - Se o PC tiver Python: abre no PC E mostra o endereco Wi-Fi para o celular!
+     - Se o PC NAO tiver Python nem Node: ele usa o servidor nativo do Windows
+       automaticamente e abre o Maracaju 3D no navegador em 2 segundos!
+
+DICA DE SINCRONIZACAO ENTRE COMPUTADORES / CELULAR:
+  - Clique em "JSON (baixar)" no topo para salvar seu cenario e mande no WhatsApp.
+  - Em casa ou no celular, clique em "JSON (subir)" para continuar exatamente
+    de onde parou!
+=====================================================================

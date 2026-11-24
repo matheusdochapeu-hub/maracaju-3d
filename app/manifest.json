@@ -1,0 +1,10 @@
+{
+  "name": "Maracaju 3D — Gêmeo Digital",
+  "short_name": "Maracaju 3D",
+  "description": "Gêmeo Digital 3D, Simulador Solar e Estúdio do Muro da Casa Maracaju 88 (Ribeirão Preto - SP)",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0b1117",
+  "theme_color": "#0d1520",
+  "icons": []
+}
