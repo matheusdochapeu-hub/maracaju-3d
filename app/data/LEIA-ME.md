@@ -5,11 +5,11 @@
 É a planta que o app carrega. Estrutura:
 
 - `versao` — deixe `1`.
-- `origem` — `estimado`, `planta-real` ou `medido`.
+- `origem` — `estimado`, `planta-real` (a prancha 1:100) ou `medido` (trena).
 - `fonte` — de onde vieram as medidas (ex.: "Planta do arquiteto, dez/2026").
 - `envelope` — limites externos em metros e pé-direito.
 - `rooms[]` — um objeto por cômodo:
-  - `id`, `nome`, `tipo` (`sala`, `quarto`, `banheiro`, `cozinha`, `circulacao`, `servico`, `outro`)
+  - `id`, `nome`, `tipo` (`sala`, `quarto`, `banheiro`, `cozinha`, `circulacao`, `varanda`, `servico`, `outro`)
   - `x`, `z`, `w`, `d` — canto de menor valor, largura (x) e profundidade (z)
   - `piso` (`porcelanato`, `ceramica`, `madeira`, `cimento`, `vinilico`, `nao_definido`)
   - `status` (`estimado` ou `medido`), `notas`
@@ -26,7 +26,7 @@ O passo a passo completo está em [`../../PLANO_REAL_E_MIDIA.md`](../../PLANO_RE
 
 ## `planta.png` — planta de fundo do projeto (opcional)
 
-Se você salvar a planta real aqui como **`planta.png`** (ou `.jpg`, `.jpeg`, `.webp`), ela aparece automaticamente como fundo na aba **Interiores → Planta** em qualquer aparelho, mesmo sem enviar a imagem de novo.
+A prancha tratada já está aqui como **`planta.png`** (linhas claras, fundo transparente, recortada nos eixos das paredes). Ela aparece automaticamente como fundo na aba **Interiores → Planta** em qualquer aparelho.
 
 - Use uma imagem nítida, de preferência exportada do PDF (não foto torta).
 - A calibragem (escala, deslocamento, opacidade) é feita uma vez em cada aparelho.

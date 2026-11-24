@@ -23,7 +23,7 @@ OPCAO 3 — PUBLICAR UMA CÓPIA RÁPIDA (10 segundos):
   O QUE FAZER PRIMEIRO NO APP
 ---------------------------------------------------------------------
   1. ABA INTERIORES
-     Confira as medidas de cada cômodo (a planta inicial é estimada).
+     Confira as medidas de cada cômodo (a planta real 1:100 já está carregada: 10 cômodos, 5,00 × 19,00 m).
      Arraste na planta para ajustar, ou digite largura/profundidade.
      Quando medir com trena, marque "Medidas conferidas".
 

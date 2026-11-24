@@ -1,7 +1,7 @@
 # Guia de campo — medir, fotografar e virar modelo 3D
 
 > Para a Casa Maracaju 88 (Ribeirão Preto/SP). Feito para ser aberto no celular enquanto você caminha pela casa.
-> Tempo total estimado: **1 h** para medir tudo + **40 min** para fotografar.
+> Tempo total estimado: **1 h 30** para medir tudo + **50 min** para fotografar.
 
 ---
 
@@ -30,7 +30,7 @@ Para cada cômodo, meça **de parede a parede, sem o rodapé**:
 
 **Atalho:** meça um cômodo inteiro e marque **"Medidas conferidas com trena"**. O percentual da casa sobe na hora.
 
-> A planta de partida é uma **estimativa** (casa vagão de ~4,8 × 15 m com corredor lateral). O objetivo é substituir cada número estimado pelo número da trena.
+> A planta real (1:100) já está carregada: 5,00 × 19,00 m internos, 10 cômodos. As cotas vieram da prancha; o objetivo agora é **confirmar na trena** cada medida e ajustar portas/janelas.
 
 ---
 
@@ -41,11 +41,14 @@ Regra de ouro: **uma foto a cada passo, sem zoom, com 70% de sobreposição**. S
 | Área | Fotos | Como fazer |
 | :--- | :---: | :--- |
 | Sala | 8 | De um canto: 4 paredes + chão + teto. Inclua portas e janelas inteiras. |
-| Quarto 1 | 8 | Mesma sequência. Abra o guarda-roupa. Registre tomadas e interruptores. |
-| Banheiro | 8 | Luz acesa. Parede do chuveiro, pia, ralo e registros. |
-| Quarto 2 | 8 | Mesma sequência do quarto 1. |
-| Cozinha | 9 | Bancada, fogão, geladeira, janela, porta dos fundos, ponto de água/gás. |
-| Corredor | 5 | De uma ponta a outra, incluindo as portas. |
+| Quarto da frente | 8 | Mesma sequência. Abra o guarda-roupa. Registre tomadas e interruptores. |
+| Quarto do fundo | 8 | Mesma sequência. Fotografe a janela do fundo. |
+| Banheiro 1 | 8 | Luz acesa. Chuveiro, pia, ralo, registros e a janela alta do poço. |
+| Banheiro 2 | 8 | Idem; confirme se os dois WCs continuam. |
+| Cozinha | 9 | Bancada, fogão, geladeira, aberturas, ponto de água/gás. |
+| Corredor | 6 | De uma ponta a outra, incluindo as portas e as 4 janelas da lateral. |
+| Alpendre / acesso | 6 | Da rua para dentro e de dentro para a rua; mostre o piso e o telhado. |
+| Poço de ventilação | 2 | De cima para baixo; confirme se é poço, armário ou área técnica. |
 | Muro de 15 m | 12 | Caminhe de frente para o muro, 1 passo por foto. Depois uma passada a 30° pegando muro + chão. |
 | Fundos / obra | 12 | Gire 360° no centro + 4 cantos olhando para o centro. Inclua o beiral e a altura dos muros. |
 | Frente | 8 | Fachada em dois ângulos, portão, canteiro 3 × 2 m e calçada. |
@@ -85,7 +88,7 @@ Regra de ouro: **uma foto a cada passo, sem zoom, com 70% de sobreposição**. S
 ## 5. Escala e Norte
 
 - **Norte verdadeiro:** o app usa o azimute do lote (padrão **40°**). Se você medir com bússola encostada no muro esquerdo, ajuste em **Casa 3D → Giro do lote**.
-- **Escala do scan:** depois de importar, use a trena como referência. Se o modelo veio 10× maior, corrija no slider de escala; a casa tem **4,8 m de largura** e **15 m de comprimento** — use isso para conferir.
+- **Escala do scan:** depois de importar, use a trena como referência. Se o modelo veio 10× maior, corrija no slider de escala; a casa tem **5,0 m de largura** e **19,0 m de comprimento** — use isso para conferir.
 - **GPS:** o botão **Usar meu GPS agora** no quintal deixa a simulação solar exata para o seu ponto. A lat/long padrão é a da casa.
 
 ---

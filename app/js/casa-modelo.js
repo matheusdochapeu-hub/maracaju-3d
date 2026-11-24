@@ -17,16 +17,20 @@ import { CORES_COMODO, ROTEIRO_CAPTURA } from './config.js';
 export const EPS = 0.001;
 const TOL_EXTERNA = 0.16;
 
-/** Medidas de partida — ESTIMADAS a partir da casa vagão (4,85 × 15 m). */
+/**
+ * Envelope real da Casa Maracaju 88, tirado da planta 1:100:
+ * 5,00 × 19,00 m internos, paredes externas de 0,20 m.
+ * As coordenadas são as linhas de centro das paredes (como no resto do app).
+ */
 export const ENVELOPE_PADRAO = {
-  x0: -1.45,
+  x0: -1.85,
   x1: 3.35,
-  z0: -6.5,
-  z1: 8.5,
-  altura: 2.9, // altura das paredes externas (até o telhado)
-  peDireito: 2.7, // altura interna
-  espExterna: 0.18,
-  espInterna: 0.10,
+  z0: -10.05,
+  z1: 9.15,
+  altura: 2.9,
+  peDireito: 2.7,
+  espExterna: 0.2,
+  espInterna: 0.15,
 };
 
 /** Porta padrão e janela padrão, em metros. */
@@ -48,6 +52,7 @@ export const TIPOS_COMODO = {
   banheiro: 'Banheiro',
   cozinha: 'Cozinha',
   circulacao: 'Circulação',
+  varanda: 'Varanda / alpendre',
   servico: 'Serviço',
   outro: 'Outro',
 };
@@ -57,115 +62,40 @@ export const TIPOS_COMODO = {
  * corredor do lado direito (sem janela) e cômodos do lado esquerdo, onde
  * ficam as janelas voltadas para o corredor externo de 2 m.
  */
+/**
+ * Planta de emergência, usada só se app/data/casa.json não carregar.
+ * O modelo real mora no JSON (origem: planta-real); aqui fica um único
+ * cômodo do tamanho do envelope para o app não abrir vazio.
+ */
 export function criarCasaPadrao() {
-  const rooms = [
-    {
-      id: 'sala',
-      nome: 'Sala',
-      tipo: 'sala',
-      x: -1.35,
-      z: 4.6,
-      w: 2.95,
-      d: 3.8,
-      cor: CORES_COMODO[0],
-      piso: 'porcelanato',
-      status: 'estimado',
-      notas: '',
-      portas: [
-        { parede: 'direita', inicio: 1.2, largura: 0.9, altura: 2.1 },
-        { parede: 'frente', inicio: 0.35, largura: 0.9, altura: 2.1, externa: true },
-      ],
-      janelas: [{ parede: 'esquerda', inicio: 0.9, largura: 1.4, altura: 1.2, peitoril: 1.0 }],
-    },
-    {
-      id: 'quarto1',
-      nome: 'Quarto 1',
-      tipo: 'quarto',
-      x: -1.35,
-      z: 1.6,
-      w: 2.95,
-      d: 3.0,
-      cor: CORES_COMODO[1],
-      piso: 'madeira',
-      status: 'estimado',
-      notas: '',
-      portas: [{ parede: 'direita', inicio: 0.7, largura: 0.8, altura: 2.1 }],
-      janelas: [{ parede: 'esquerda', inicio: 0.8, largura: 1.2, altura: 1.1, peitoril: 1.0 }],
-    },
-    {
-      id: 'banheiro',
-      nome: 'Banheiro',
-      tipo: 'banheiro',
-      x: -1.35,
-      z: -0.4,
-      w: 2.95,
-      d: 2.0,
-      cor: CORES_COMODO[2],
-      piso: 'ceramica',
-      status: 'estimado',
-      notas: '',
-      portas: [{ parede: 'direita', inicio: 0.9, largura: 0.7, altura: 2.1 }],
-      janelas: [{ parede: 'esquerda', inicio: 0.9, largura: 0.6, altura: 0.6, peitoril: 1.6 }],
-    },
-    {
-      id: 'quarto2',
-      nome: 'Quarto 2',
-      tipo: 'quarto',
-      x: -1.35,
-      z: -3.6,
-      w: 2.95,
-      d: 3.2,
-      cor: CORES_COMODO[3],
-      piso: 'madeira',
-      status: 'estimado',
-      notas: '',
-      portas: [{ parede: 'direita', inicio: 0.9, largura: 0.8, altura: 2.1 }],
-      janelas: [{ parede: 'esquerda', inicio: 0.8, largura: 1.2, altura: 1.1, peitoril: 1.0 }],
-    },
-    {
-      id: 'cozinha',
-      nome: 'Cozinha / copa',
-      tipo: 'cozinha',
-      x: -1.35,
-      z: -6.4,
-      w: 2.95,
-      d: 2.8,
-      cor: CORES_COMODO[4],
-      piso: 'ceramica',
-      status: 'estimado',
-      notas: '',
-      portas: [
-        { parede: 'direita', inicio: 0.8, largura: 0.8, altura: 2.1 },
-        { parede: 'fundo', inicio: 0.4, largura: 0.9, altura: 2.1, externa: true },
-      ],
-      janelas: [{ parede: 'esquerda', inicio: 0.7, largura: 1.2, altura: 1.1, peitoril: 1.1 }],
-    },
-    {
-      id: 'corredor',
-      nome: 'Corredor',
-      tipo: 'circulacao',
-      x: 1.6,
-      z: -6.4,
-      w: 1.65,
-      d: 14.8,
-      cor: CORES_COMODO[5],
-      piso: 'ceramica',
-      status: 'estimado',
-      notas: '',
-      portas: [],
-      janelas: [],
-    },
-  ];
+  const env = { ...ENVELOPE_PADRAO };
+  const margem = env.espExterna / 2;
   return {
     versao: 1,
-    origem: 'estimado',
-    fonte: 'Planta estimada da casa vagão (4,80 × 15,00 m). Substituir pela planta real.',
-    envelope: { ...ENVELOPE_PADRAO },
-    rooms,
+    origem: 'sem-origem',
+    fonte: 'Nenhuma planta carregada. Use Dados → Carregar do projeto.',
+    envelope: env,
+    rooms: [
+      {
+        id: 'casa',
+        nome: 'Casa (sem planta)',
+        tipo: 'outro',
+        x: env.x0 + margem,
+        z: env.z0 + margem,
+        w: env.x1 - env.x0 - env.espExterna,
+        d: env.z1 - env.z0 - env.espExterna,
+        cor: '#94a3b8',
+        piso: 'nao_definido',
+        status: 'estimado',
+        notas: '',
+        portas: [],
+        janelas: [],
+        mobilia: false,
+      },
+    ],
     atualizadoEm: null,
   };
 }
-
 export function clonar(obj) {
   return JSON.parse(JSON.stringify(obj));
 }
@@ -526,11 +456,11 @@ export function diagnosticarPlanta(casa) {
 export function completudeComodo(room, fotos = 0) {
   const roteiro = ROTEIRO_CAPTURA[room.id] || { alvo: 6 };
   const alvo = roteiro.alvo || 6;
-  const circulacao = room.tipo === 'circulacao';
+  const semAberturas = ['circulacao', 'varanda', 'servico'].includes(room.tipo);
   const checks = [
     { id: 'medido', rotulo: 'Medidas conferidas na trena', peso: 25, ok: room.status === 'medido' },
-    { id: 'portas', rotulo: 'Portas registradas', peso: 10, ok: room.portas.length > 0, aplicavel: !circulacao },
-    { id: 'janelas', rotulo: 'Janelas registradas', peso: 10, ok: room.janelas.length > 0, aplicavel: !circulacao },
+    { id: 'portas', rotulo: 'Portas registradas', peso: 10, ok: room.portas.length > 0, aplicavel: !semAberturas },
+    { id: 'janelas', rotulo: 'Janelas registradas', peso: 10, ok: room.janelas.length > 0, aplicavel: !semAberturas },
     { id: 'piso', rotulo: 'Piso definido', peso: 15, ok: room.piso && room.piso !== 'nao_definido' },
     {
       id: 'fotos',

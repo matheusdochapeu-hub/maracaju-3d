@@ -1,177 +1,256 @@
 {
   "versao": 1,
+  "origem": "planta-real",
+  "fonte": "Planta baixa 1:100 (scan da planta, CREA 86538) — casa 88 m², terreno 159,50 m². Recuo frontal 5,00 m. Medidas da planta; conferir no local.",
+  "atualizadoEm": "2026-11-24T19:36:50.746963Z",
   "envelope": {
-    "x0": -1.45,
+    "x0": -1.85,
     "x1": 3.35,
-    "z0": -6.5,
-    "z1": 8.5,
+    "z0": -11.75,
+    "z1": 7.45,
     "altura": 2.9,
     "peDireito": 2.7,
-    "espExterna": 0.18,
-    "espInterna": 0.1
+    "espExterna": 0.2,
+    "espInterna": 0.15
   },
   "rooms": [
     {
-      "id": "sala",
-      "nome": "Sala",
-      "tipo": "sala",
-      "x": -1.35,
-      "z": 4.6,
-      "w": 2.95,
-      "d": 3.8,
-      "cor": "#38bdf8",
-      "piso": "porcelanato",
-      "status": "estimado",
-      "notas": "",
+      "id": "quarto1",
+      "nome": "Quarto da frente",
+      "tipo": "quarto",
+      "x": 0.25,
+      "z": 3.35,
+      "w": 3,
+      "d": 4,
+      "cor": "#a78bfa",
+      "piso": "madeira",
+      "status": "medido",
+      "notas": "Quarto da frente. Planta: 3,00 × 4,00 m. Janela na fachada e porta para a sala.",
       "portas": [
         {
-          "parede": "direita",
-          "inicio": 1.2,
-          "largura": 0.9,
+          "parede": "fundo",
+          "inicio": 2.1,
+          "largura": 0.8,
           "altura": 2.1
-        },
-        {
-          "parede": "frente",
-          "inicio": 0.35,
-          "largura": 0.9,
-          "altura": 2.1,
-          "externa": true
         }
       ],
       "janelas": [
         {
-          "parede": "esquerda",
-          "inicio": 0.9,
-          "largura": 1.4,
+          "parede": "frente",
+          "inicio": 1.1,
+          "largura": 1.2,
           "altura": 1.2,
           "peitoril": 1
         }
       ]
     },
     {
-      "id": "quarto1",
-      "nome": "Quarto 1",
-      "tipo": "quarto",
-      "x": -1.35,
-      "z": 1.6,
-      "w": 2.95,
-      "d": 3,
-      "cor": "#a78bfa",
-      "piso": "madeira",
-      "status": "estimado",
-      "notas": "",
+      "id": "alpendre",
+      "nome": "Alpendre",
+      "tipo": "varanda",
+      "x": -1.75,
+      "z": 3.35,
+      "w": 2,
+      "d": 4,
+      "cor": "#86efac",
+      "piso": "cimento",
+      "status": "medido",
+      "notas": "Alpendre da frente (planta: 2,00 × 5,00 m). O 1,00 m extra foi modelado como acesso; o canto é chanfrado.",
       "portas": [
         {
-          "parede": "direita",
-          "inicio": 0.7,
+          "parede": "frente",
+          "inicio": 0.1,
+          "largura": 1.8,
+          "altura": 2.2
+        },
+        {
+          "parede": "esquerda",
+          "inicio": 0.2,
+          "largura": 3.6,
+          "altura": 2.2
+        },
+        {
+          "parede": "fundo",
+          "inicio": 0.2,
+          "largura": 1.2,
+          "altura": 2.2
+        }
+      ],
+      "janelas": []
+    },
+    {
+      "id": "alpendre_acesso",
+      "nome": "Acesso",
+      "tipo": "circulacao",
+      "x": -1.75,
+      "z": 2.35,
+      "w": 1.5,
+      "d": 1,
+      "cor": "#a3e635",
+      "piso": "cimento",
+      "status": "medido",
+      "notas": "Trecho coberto entre o alpendre, o corredor e a sala (o 1,00 m que falta no alpendre).",
+      "portas": [],
+      "janelas": []
+    },
+    {
+      "id": "sala",
+      "nome": "Sala",
+      "tipo": "sala",
+      "x": -0.25,
+      "z": -0.65,
+      "w": 3.5,
+      "d": 4,
+      "cor": "#38bdf8",
+      "piso": "porcelanato",
+      "status": "medido",
+      "notas": "Sala. Planta: 3,55 × 4,00 m (modelada 3,50 para fechar o envelope). Porta da varanda e abertura para a cozinha.",
+      "portas": [
+        {
+          "parede": "esquerda",
+          "inicio": 3.1,
+          "largura": 0.8,
+          "altura": 2.1
+        },
+        {
+          "parede": "esquerda",
+          "inicio": 0.3,
+          "largura": 0.9,
+          "altura": 2.1
+        },
+        {
+          "parede": "fundo",
+          "inicio": 2.4,
+          "largura": 1,
+          "altura": 2.1
+        }
+      ],
+      "janelas": []
+    },
+    {
+      "id": "cozinha",
+      "nome": "Cozinha",
+      "tipo": "cozinha",
+      "x": -0.25,
+      "z": -4.65,
+      "w": 3.5,
+      "d": 4,
+      "cor": "#fbbf24",
+      "piso": "ceramica",
+      "status": "medido",
+      "notas": "Cozinha. Planta: 3,55 × 4,00 m (modelada 3,50). Acesso pelo corredor e pela sala.",
+      "portas": [
+        {
+          "parede": "esquerda",
+          "inicio": 0.6,
           "largura": 0.8,
           "altura": 2.1
         }
       ],
-      "janelas": [
-        {
-          "parede": "esquerda",
-          "inicio": 0.8,
-          "largura": 1.2,
-          "altura": 1.1,
-          "peitoril": 1
-        }
-      ]
+      "janelas": []
     },
     {
       "id": "banheiro",
-      "nome": "Banheiro",
+      "nome": "Banheiro 1",
       "tipo": "banheiro",
-      "x": -1.35,
-      "z": -0.4,
-      "w": 2.95,
-      "d": 2,
+      "x": -0.25,
+      "z": -6.15,
+      "w": 2.4,
+      "d": 1.5,
       "cor": "#22d3ee",
       "piso": "ceramica",
-      "status": "estimado",
-      "notas": "",
+      "status": "medido",
+      "notas": "WC 1. Planta: 2,40 × 1,50 m. Janela alta para o poço de ventilação.",
       "portas": [
         {
-          "parede": "direita",
-          "inicio": 0.9,
+          "parede": "esquerda",
+          "inicio": 0.3,
           "largura": 0.7,
           "altura": 2.1
         }
       ],
       "janelas": [
         {
-          "parede": "esquerda",
-          "inicio": 0.9,
+          "parede": "direita",
+          "inicio": 0.35,
           "largura": 0.6,
-          "altura": 0.6,
+          "altura": 0.5,
           "peitoril": 1.6
         }
       ]
     },
     {
-      "id": "quarto2",
-      "nome": "Quarto 2",
-      "tipo": "quarto",
-      "x": -1.35,
-      "z": -3.6,
-      "w": 2.95,
-      "d": 3.2,
-      "cor": "#c084fc",
-      "piso": "madeira",
-      "status": "estimado",
-      "notas": "",
+      "id": "banheiro2",
+      "nome": "Banheiro 2",
+      "tipo": "banheiro",
+      "x": -0.25,
+      "z": -7.65,
+      "w": 2.4,
+      "d": 1.5,
+      "cor": "#34d399",
+      "piso": "ceramica",
+      "status": "medido",
+      "notas": "WC 2. Planta: 2,40 × 1,50 m. Confirmar se os dois WCs continuam (planta antiga).",
       "portas": [
         {
-          "parede": "direita",
-          "inicio": 0.9,
-          "largura": 0.8,
+          "parede": "esquerda",
+          "inicio": 0.25,
+          "largura": 0.7,
           "altura": 2.1
         }
       ],
       "janelas": [
         {
-          "parede": "esquerda",
-          "inicio": 0.8,
-          "largura": 1.2,
-          "altura": 1.1,
-          "peitoril": 1
+          "parede": "direita",
+          "inicio": 0.35,
+          "largura": 0.6,
+          "altura": 0.5,
+          "peitoril": 1.6
         }
       ]
     },
     {
-      "id": "cozinha",
-      "nome": "Cozinha / copa",
-      "tipo": "cozinha",
-      "x": -1.35,
-      "z": -6.4,
-      "w": 2.95,
-      "d": 2.8,
-      "cor": "#fbbf24",
-      "piso": "ceramica",
+      "id": "poco",
+      "nome": "Poço",
+      "tipo": "servico",
+      "x": 2.15,
+      "z": -7.65,
+      "w": 1.1,
+      "d": 3,
+      "cor": "#64748b",
+      "piso": "cimento",
       "status": "estimado",
-      "notas": "",
+      "notas": "Faixa de 1,00 m ao lado dos banheiros (planta). Confirmar no local se é poço, armário ou área técnica.",
+      "portas": [],
+      "janelas": []
+    },
+    {
+      "id": "quarto2",
+      "nome": "Quarto do fundo",
+      "tipo": "quarto",
+      "x": -0.25,
+      "z": -11.65,
+      "w": 3.5,
+      "d": 4,
+      "cor": "#c084fc",
+      "piso": "madeira",
+      "status": "medido",
+      "notas": "Quarto do fundo. Planta: 3,50 × 4,00 m. Janela no fundo e porta para o corredor.",
       "portas": [
         {
-          "parede": "direita",
-          "inicio": 0.8,
+          "parede": "esquerda",
+          "inicio": 1.4,
           "largura": 0.8,
           "altura": 2.1
-        },
-        {
-          "parede": "fundo",
-          "inicio": 0.4,
-          "largura": 0.9,
-          "altura": 2.1,
-          "externa": true
         }
       ],
       "janelas": [
         {
-          "parede": "esquerda",
-          "inicio": 0.7,
+          "parede": "fundo",
+          "inicio": 1.6,
           "largura": 1.2,
           "altura": 1.1,
-          "peitoril": 1.1
+          "peitoril": 1
         }
       ]
     },
@@ -179,19 +258,58 @@
       "id": "corredor",
       "nome": "Corredor",
       "tipo": "circulacao",
-      "x": 1.6,
-      "z": -6.4,
-      "w": 1.65,
-      "d": 14.8,
+      "x": -1.75,
+      "z": -11.65,
+      "w": 1.5,
+      "d": 14,
       "cor": "#94a3b8",
       "piso": "ceramica",
-      "status": "estimado",
-      "notas": "",
-      "portas": [],
-      "janelas": []
+      "status": "medido",
+      "notas": "Corredor lateral de 1,50 m, com 4 janelas para a rua lateral e porta para o quintal no fundo.",
+      "portas": [
+        {
+          "parede": "fundo",
+          "inicio": 0.2,
+          "largura": 1,
+          "altura": 2.1
+        },
+        {
+          "parede": "frente",
+          "inicio": 0.2,
+          "largura": 1.2,
+          "altura": 2.2
+        }
+      ],
+      "janelas": [
+        {
+          "parede": "esquerda",
+          "inicio": 1.95,
+          "largura": 1.2,
+          "altura": 1.1,
+          "peitoril": 1
+        },
+        {
+          "parede": "esquerda",
+          "inicio": 5.95,
+          "largura": 1.2,
+          "altura": 1.1,
+          "peitoril": 1
+        },
+        {
+          "parede": "esquerda",
+          "inicio": 9.95,
+          "largura": 1.2,
+          "altura": 1.1,
+          "peitoril": 1
+        },
+        {
+          "parede": "esquerda",
+          "inicio": 12.75,
+          "largura": 1.2,
+          "altura": 1.1,
+          "peitoril": 1
+        }
+      ]
     }
-  ],
-  "atualizadoEm": null,
-  "origem": "estimado",
-  "fonte": "Planta estimada da casa vagão (4,80 × 15,00 m). Substituir pela planta real assim que ela chegar."
+  ]
 }

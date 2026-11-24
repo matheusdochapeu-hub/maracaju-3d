@@ -1,12 +1,12 @@
 # Quando a planta real chegar (e as fotos e vídeos)
 
-> Este documento é o roteiro para trocar a **planta estimada** pela **planta real** e para organizar as **fotos e vídeos** que você vai gravar. O app foi montado para não precisar de programador nessa hora.
+> A **planta real já está carregada** (ver [`PLANTA_MARACAJU_88.md`](./PLANTA_MARACAJU_88.md)). Este documento continua sendo o roteiro para **corrigir medidas** e organizar as **fotos e vídeos** que você vai gravar.
 
 ---
 
 ## Parte 1 — Trocar a planta estimada pela real
 
-Hoje o app abre com uma planta **estimada** da casa vagão (4,80 × 15,00 m). O modelo de verdade mora em **`app/data/casa.json`**. Você pode substituí-lo de três formas — escolha a que for mais confortável.
+O app abre com a planta da prancha 1:100 (5,00 × 19,00 m internos, 10 cômodos). O modelo mora em **`app/data/casa.json`** e pode ser corrigido de três formas — escolha a que for mais confortável.
 
 ### Caminho A — Desenhar por cima da planta (recomendado)
 
@@ -146,7 +146,7 @@ Se o nome não tiver a área, o app usa a área selecionada no momento da import
    - **Scaniverse** no celular → exportar `.glb` → **Casa 3D → Scan 3D**.
    - **Google Colab** com `tools/colab_3d_reconstruct.py` → `.ply` → **Casa 3D → Scan 3D**.
    - **Sweet Home 3D** para interiores com medidas exatas → `.obj`.
-3. Ajuste escala/rotação/posição do scan usando a casa de **4,80 × 15,00 m** como referência.
+3. Ajuste escala/rotação/posição do scan usando a casa de **5,00 × 19,00 m** como referência.
 
 ### Arquivo morto no notebook (opcional)
 
@@ -192,7 +192,7 @@ Nada disso é lido automaticamente pelo app publicado; é o seu arquivo de campo
 - [ ] Exportar o pacote `.zip`.
 - [ ] Rodar o Scaniverse ou o Colab.
 - [ ] Importar o `.glb`/`.ply` em **Casa 3D → Scan 3D**.
-- [ ] Ajustar escala (4,80 m de largura) e rotação Norte.
+- [ ] Ajustar escala (5,00 m de largura) e rotação Norte.
 
 ---
 
@@ -218,4 +218,4 @@ Nada disso é lido automaticamente pelo app publicado; é o seu arquivo de campo
 
 **A planta está girada/invertida.** Use "Girar" (0/90/180/270) e "Deslocar X/Z". O app desenha a planta com a frente para baixo, igual à planta baixa.
 
-**O scan 3D veio gigante.** Ajuste a escala no painel do Scan 3D; a casa tem 4,80 m de largura.
+**O scan 3D veio gigante.** Ajuste a escala no painel do Scan 3D; a casa tem 5,00 m de largura.

@@ -553,7 +553,7 @@ function renderModuloSelecionado() {
       el.textContent = `⚠️ ${diag.alerta}`;
     } else {
       el.className = 'alerta ok';
-      el.textContent = `✅ ${diag.dica}`;
+      el.textContent = '✅ Microclima compatível com o módulo.';
     }
   }, 60);
 }

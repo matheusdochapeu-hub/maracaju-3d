@@ -2,7 +2,7 @@
 
 > **O que é:** um app web (sem build, sem servidor) para **medir, fotografar e simular** a Casa Maracaju 88 antes de reformar.
 > **Onde:** Rua Maracaju, 88 — Vila Tibério, Ribeirão Preto/SP · `-21,1742° S, -47,8339° W` · eixo do lote `~40°`
-> **Status:** app v3 — planta editável, interiores navegáveis, captura guiada com o celular e sol real. Testado no notebook e pensado para o celular em casa.
+> **Status:** app v4 — **planta real 1:100 carregada** (10 cômodos, 95 m² úteis), interiores navegáveis, captura guiada com o celular e sol real. Testado no notebook e pensado para o celular em casa.
 
 ---
 
@@ -16,15 +16,21 @@
 | Como eu levanto a casa de verdade? | **Captura** → fotos e vídeos guiados por área, com pacote `.zip` pronto para virar 3D. |
 | O que ainda falta medir? | **Dados** → progresso, ficha da casa em Markdown e lista de pendências. |
 
-## Preparado para a planta real
+## A planta real já está no app
 
-A planta que abre hoje é **estimada** (casa vagão de ~4,80 × 15,00 m), mas o modelo é um arquivo de dados: [`app/data/casa.json`](./app/data/casa.json). Quando a planta real chegar, você pode:
+O modelo não é mais um chute: vem da **prancha 1:100** da casa (terreno 159,50 m², área a construir 88 m²). A casa tem **5,00 × 19,00 m internos**, **10 cômodos** (dois banheiros, alpendre, poço de ventilação e corredor lateral) e 95 m² úteis.
 
-1. **Desenhar por cima** — envie a planta como imagem de fundo na aba Interiores, calibre com uma cota conhecida e arraste os cômodos (recomendado).
-2. **Editar o arquivo** — troque cômodos/medidas em `app/data/casa.json` e clique em **Dados → Carregar do projeto**.
+- O modelo vive em [`app/data/casa.json`](./app/data/casa.json) e é editável.
+- A prancha tratada está em [`app/data/planta.png`](./app/data/planta.png) e aparece como **fundo da planta 2D** em qualquer aparelho.
+- O que foi modelado, as cotas e o que ainda precisa de conferência estão em [`PLANTA_MARACAJU_88.md`](./PLANTA_MARACAJU_88.md).
+
+Para atualizar quando medir no local:
+
+1. **Editar no app** — Interiores → Planta: arraste/redimensione e ajuste portas e janelas; marque como medido.
+2. **Editar o arquivo** — mude `app/data/casa.json` e clique em **Dados → Carregar do projeto**.
 3. **Pedir para um agente** — o schema e o passo a passo estão em [`PLANO_REAL_E_MIDIA.md`](./PLANO_REAL_E_MIDIA.md).
 
-As fotos e vídeos também já têm fluxo: importação em lote com **detecção da área pelo nome do arquivo**, gravação de vídeo pelo app e pacote `.zip` para Scaniverse/Colab. Veja o guia em [`PLANO_REAL_E_MIDIA.md`](./PLANO_REAL_E_MIDIA.md).
+As fotos e vídeos também já têm fluxo: importação em lote com **detecção da área pelo nome do arquivo**, gravação de vídeo pelo app e pacote `.zip` para Scaniverse/Colab.
 
 ## As 4 abas
 
@@ -54,7 +60,7 @@ O terminal mostra o endereço do notebook e o do celular na mesma rede.
 
 ## O modelo da casa (o coração do projeto)
 
-A planta não está mais chumbada no código. Tudo vive em `app/js/casa-modelo.js` e é editável no app:
+A planta não está chumbada no código: o modelo real vive em `app/data/casa.json` (carregado no boot) e é editável no app. A validação e a geometria ficam em `app/js/casa-modelo.js`.
 
 ```js
 {
@@ -71,7 +77,7 @@ A planta não está mais chumbada no código. Tudo vive em `app/js/casa-modelo.j
 
 - O **3D**, a **planta 2D** e a **ficha** são três leituras do mesmo objeto: mexeu na planta, o 3D e as contas mudam juntos.
 - As paredes são geradas automaticamente: paredes compartilhadas viram uma só, portas e janelas viram vãos reais (com peitoril e verga).
-- A planta de partida é **estimada** a partir da casa vagão (~4,8 × 15 m). Cada cômodo tem um status; quando você mede com trena, marca como **medido** e o cálculo de sol passa a valer mais.
+- A planta carregada é a da **prancha 1:100**: 5,00 × 19,00 m internos, 10 cômodos. Cada cômodo tem um status; quando você mede com trena, marca como **medido** e o cálculo de sol fica mais confiável.
 - O sol do cômodo é calculado por **raycasting** contra as paredes, janelas e telhado — não é chute.
 
 ## Captura → modelo 3D
@@ -89,11 +95,11 @@ Passo a passo detalhado de campo: [`GUIA_CAPTURA_E_RECONSTRUCAO_3D.md`](./GUIA_C
 
 ## Onde ficam os dados
 
-- Medidas, módulos e ajustes: `localStorage` do navegador (chave `maracaju3d_estado_v3`).
+- Medidas, módulos e ajustes: `localStorage` do navegador (chave `maracaju3d_estado_v4`).
 - Fotos e vídeos: `IndexedDB` do aparelho (nada é enviado para servidor).
 - Backup para trocar de aparelho: **Dados → Backup** (JSON). Fotos saem no pacote `.zip` da Captura.
 
-> Cenários da versão anterior (`maracaju3d_state_v1`) são migrados automaticamente na primeira abertura.
+> Cenários da versão anterior (`maracaju3d_state_v1`) são migrados automaticamente. O estado v3 (planta estimada) é ignorado a partir desta versão: a casa abre com a planta real; as fotos continuam no IndexedDB.
 
 ## Testes
 
@@ -110,9 +116,12 @@ Cobrem o modelo da casa (paredes, vãos, completude, colisão), a escala da plan
 | `app/css/style.css` | Tema escuro, layout de 3 colunas no desktop e navegação inferior no celular. |
 | `app/js/main.js` | Estado, abas, sol, terreno, módulos, scan e backup. |
 | `app/js/mundo.js` | Cena Three.js: lote, módulos, telhado, satélite e sol. |
+| `app/data/casa.json` | **Modelo real da casa** (envelope, 10 cômodos, portas e janelas). |
+| `app/data/planta.png` | Prancha tratada (linhas claras, fundo transparente) usada como fundo na planta. |
 | `app/js/casa-modelo.js` | Modelo puro da casa: cômodos, paredes, vãos, áreas, completude, colisão. |
 | `app/js/casa-3d.js` | Constrói a casa em Three.js a partir do modelo (inclui móveis de referência). |
-| `app/js/interiores.js` | Lista/editor de cômodos, planta 2D editável e passeio. |
+| `app/js/interiores.js` | Lista/editor de cômodos, planta 2D editável, fundo da prancha e passeio. |
+| `app/js/planta.js` | Escala e calibragem da planta de fundo. |
 | `app/js/captura.js` | Câmera, MediaRecorder, galeria IndexedDB e pacote ZIP. |
 | `app/js/levantamento.js` | Progresso, ficha, pendências, envelope e backups. |
 | `app/js/zip.js` | Gerador de `.zip` sem biblioteca externa. |
@@ -122,12 +131,14 @@ Cobrem o modelo da casa (paredes, vãos, completude, colisão), a escala da plan
 | `tools/exif_geo_mapper.py` | Opcional: varre `capturas/`, extrai GPS e gera manifesto geográfico. |
 | `tools/colab_3d_reconstruct.py` | Receita pronta de VGGT no Colab. |
 | `run_maracaju_3d.py` | Servidor local para abrir no celular pela mesma rede Wi-Fi. |
+| [`PLANTA_MARACAJU_88.md`](./PLANTA_MARACAJU_88.md) | O que foi lido da prancha, medidas, premissas e pendências de conferência. |
 
 ## Próximos passos em casa
 
-- [ ] Enviar a planta real como fundo na aba Interiores e calibrar a escala.
-- [ ] Medir largura, profundidade e pé-direito de cada cômodo e marcar como **medido**.
-- [ ] Conferir portas e janelas (largura, altura, peitoril) — hoje são estimativas.
+- [ ] Conferir na trena as medidas da prancha (5,00 × 19,00 m) e o pé-direito.
+- [ ] Confirmar os dois banheiros, o poço de ventilação e o alpendre de 5,00 m.
+- [ ] Conferir portas e janelas (largura, altura, peitoril) — posições inferidas do scan.
+- [ ] Medir o lote real (frente de 5,50 m?) e decidir se o cenário externo muda.
 - [ ] Fotografar cada cômodo (8 fotos) e os fundos (12 fotos).
 - [ ] Exportar o pacote e gerar o `.glb` no Scaniverse ou no Colab.
 - [ ] Comparar sol de verão × inverno antes de fechar a cobertura dos fundos.

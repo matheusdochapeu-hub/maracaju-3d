@@ -54,6 +54,7 @@ function limparGrupo(grupo) {
 }
 
 function criarEtiqueta(nome, areaTxt, cor) {
+  const largura = Math.min(1.8, Math.max(1.0, 0.55 + nome.length * 0.1));
   const canvas = document.createElement('canvas');
   canvas.width = 512;
   canvas.height = 170;
@@ -77,10 +78,10 @@ function criarEtiqueta(nome, areaTxt, cor) {
   ctx.fillText(areaTxt, 256, 124);
   const textura = new THREE.CanvasTexture(canvas);
   textura.colorSpace = THREE.SRGBColorSpace;
-  const material = new THREE.SpriteMaterial({ map: textura, transparent: true, depthTest: false });
+  const material = new THREE.SpriteMaterial({ map: textura, transparent: true, depthTest: true });
   material.userData.proprio = true;
   const sprite = new THREE.Sprite(material);
-  sprite.scale.set(1.9, 0.63, 1);
+  sprite.scale.set(largura, largura / 3, 1);
   sprite.renderOrder = 10;
   return sprite;
 }
@@ -221,6 +222,7 @@ export function construirCasa(casa) {
       if (room.mobilia !== false) moveisDoComodo(room, grupoMobilia);
       const etiqueta = criarEtiqueta(room.nome, `${areaComodo(room).toFixed(1).replace('.', ',')} m²`, room.cor);
       etiqueta.position.set(room.x + room.w / 2, env.peDireito + 0.25, room.z + room.d / 2);
+      etiqueta.userData.comodoId = room.id;
       grupoEtiquetas.add(etiqueta);
     }
 
@@ -258,10 +260,13 @@ export function construirCasa(casa) {
     grupoDestaque.add(linha);
   }
 
-  function definirVisibilidade({ interior = true, mobilia = true, etiquetas = true } = {}) {
+  function definirVisibilidade({ interior = true, mobilia = true, etiquetas = true, selecionado = null } = {}) {
     grupoInterior.visible = interior;
     grupoMobilia.visible = interior && mobilia;
     grupoEtiquetas.visible = interior && etiquetas;
+    for (const sprite of grupoEtiquetas.children) {
+      sprite.visible = !selecionado || sprite.userData.comodoId === selecionado;
+    }
     grupoDestaque.visible = interior;
   }
 

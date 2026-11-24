@@ -18,13 +18,13 @@ import { construirCasa } from './casa-3d.js';
 
 const AZIMUTE_PADRAO = 40;
 const PRESETS = {
-  geral: { pos: [16, 17, 19], alvo: [0, 1.2, -1] },
-  muro: { pos: [6.5, 4.5, 7.5], alvo: [-2.8, 1.2, 0.5] },
-  fundos: { pos: [10.5, 7.5, -15.5], alvo: [0, 1.0, -9.8] },
+  geral: { pos: [16, 13, 24], alvo: [0, 1.2, -1] },
+  muro: { pos: [6.5, 5.5, 9.0], alvo: [-2.8, 1.0, 1.0] },
+  fundos: { pos: [11, 8, -21], alvo: [0, 1.0, -14.5] },
   frente: { pos: [-9.5, 6.0, 16.0], alvo: [-1.2, 1.0, 10.2] },
-  topo: { pos: [0.1, 31, 0.1], alvo: [0, 0, 0] },
-  casa: { pos: [8.2, 18, 8.2], alvo: [0.95, 0.8, 1.0] },
-  planta: { pos: [0.95, 26, 1.0], alvo: [0.95, 0, 0.95] },
+  topo: { pos: [0.1, 36, -3], alvo: [0, 0, -3] },
+  casa: { pos: [9.0, 18, 9.0], alvo: [0.5, 0.8, -2.15] },
+  planta: { pos: [0.5, 32, -2.15], alvo: [0.5, 0, -2.15] },
 };
 
 export function criarMundo({ obterEstado, obterCasa, aoSelecionarModulo, aoAtualizarSol }) {
@@ -59,7 +59,7 @@ export function criarMundo({ obterEstado, obterCasa, aoSelecionarModulo, aoAtual
   sol.shadow.mapSize.set(2048, 2048);
   sol.shadow.camera.near = 1;
   sol.shadow.camera.far = 95;
-  const limiteSombra = 24;
+  const limiteSombra = 30;
   sol.shadow.camera.left = -limiteSombra;
   sol.shadow.camera.right = limiteSombra;
   sol.shadow.camera.top = limiteSombra;
@@ -102,7 +102,7 @@ export function criarMundo({ obterEstado, obterCasa, aoSelecionarModulo, aoAtual
   // ---------- Rosa dos ventos ----------
   const rosa = new THREE.Group();
   {
-    const raio = 16.5;
+    const raio = 19.5;
     const anel = new THREE.Mesh(
       new THREE.RingGeometry(raio - 0.12, raio + 0.12, 64),
       new THREE.MeshBasicMaterial({ color: 0x334e68, side: THREE.DoubleSide })
@@ -170,16 +170,16 @@ export function criarMundo({ obterEstado, obterCasa, aoSelecionarModulo, aoAtual
     return malha;
   }
 
-  caixa(lote, 7.0, 0.08, 25.0, 0, -0.02, 0, 0x2c353f, { castShadow: false });
+  caixa(lote, 7.0, 0.08, 31.0, 0, -0.02, -3.05, 0x2c353f, { castShadow: false });
   caixa(lote, 9.0, 0.06, 3.2, 0, -0.04, 14.2, 0x1b2026, { castShadow: false });
   const rotuloRua = etiquetaTexto('Rua Maracaju (frente)', '#94a3b8', 26, 5);
   rotuloRua.position.set(0, 0.4, 14.3);
   lote.add(rotuloRua);
 
   // Muros de divisa e muro frontal
-  caixa(lote, 0.16, 2.4, 25.0, -3.45, 1.2, 0, 0xb8afa3, { occluder: true });
-  caixa(lote, 0.16, 2.4, 25.0, 3.45, 1.2, 0, 0xa89f93, { occluder: true });
-  caixa(lote, 7.0, 2.6, 0.18, 0, 1.3, -12.45, 0xa89f93, { occluder: true });
+  caixa(lote, 0.16, 2.4, 31.0, -3.45, 1.2, -3.05, 0xb8afa3, { occluder: true });
+  caixa(lote, 0.16, 2.4, 31.0, 3.45, 1.2, -3.05, 0xa89f93, { occluder: true });
+  caixa(lote, 7.0, 2.6, 0.18, 0, 1.3, -18.55, 0xa89f93, { occluder: true });
   caixa(lote, 7.0, 1.8, 0.15, 0, 0.9, 12.45, 0x64748b, { occluder: true });
 
   // Canteiro frontal + aceroleira existente
@@ -198,8 +198,8 @@ export function criarMundo({ obterEstado, obterCasa, aoSelecionarModulo, aoAtual
   const telhadoOccluders = [];
   const materialTelha = new THREE.MeshStandardMaterial({ color: 0x8c4a32, roughness: 0.85 });
   for (const lado of [-1, 1]) {
-    const agua = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.14, 15.6), materialTelha);
-    agua.position.set(lado < 0 ? -0.2 : 2.1, 3.42, 1.0);
+    const agua = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.14, 19.6), materialTelha);
+    agua.position.set(lado < 0 ? -0.55 : 2.05, 3.42, -2.15);
     agua.rotation.z = lado < 0 ? 0.26 : -0.26;
     agua.castShadow = true;
     agua.receiveShadow = true;
@@ -212,14 +212,14 @@ export function criarMundo({ obterEstado, obterCasa, aoSelecionarModulo, aoAtual
   const grupoCoberturaFundos = new THREE.Group();
   lote.add(grupoCoberturaFundos);
   [
-    [-3.2, -9.8],
-    [0.0, -9.8],
-    [3.2, -9.8],
+    [-3.2, -12.9],
+    [0.0, -12.9],
+    [3.2, -12.9],
   ].forEach(([px, pz]) => caixa(grupoCoberturaFundos, 0.12, 2.85, 0.12, px, 1.42, pz, 0x334155));
 
   const materialTelhaFundos = new THREE.MeshStandardMaterial({ color: 0xdbeafe, roughness: 0.5, metalness: 0.25 });
   const telhaFundos = new THREE.Mesh(new THREE.BoxGeometry(6.7, 0.08, 3.4), materialTelhaFundos);
-  telhaFundos.position.set(0, 2.92, -8.2);
+  telhaFundos.position.set(0, 2.92, -14.5);
   telhaFundos.rotation.x = -0.06;
   telhaFundos.castShadow = true;
   telhaFundos.receiveShadow = true;
@@ -233,7 +233,7 @@ export function criarMundo({ obterEstado, obterCasa, aoSelecionarModulo, aoAtual
     opacity: 0.42,
   });
   const telhaTranslucida = new THREE.Mesh(new THREE.BoxGeometry(6.7, 0.06, 1.0), materialTranslucida);
-  telhaTranslucida.position.set(0, 2.81, -10.35);
+  telhaTranslucida.position.set(0, 2.81, -15.9);
   telhaTranslucida.rotation.x = -0.06;
   grupoCoberturaFundos.add(telhaTranslucida);
 
@@ -633,6 +633,7 @@ export function criarMundo({ obterEstado, obterCasa, aoSelecionarModulo, aoAtual
       interior: mostrarInterior,
       mobilia: mostrarInterior && estado.mobilia !== false,
       etiquetas: mostrarInterior && estado.etiquetas !== false && estado.modo !== 'passeio',
+      selecionado: estado.comodoSelecionado,
     });
     const destaque = mostrarInterior ? estado.comodoSelecionado : null;
     if (destaque !== destaqueAtual) {
@@ -647,12 +648,12 @@ export function criarMundo({ obterEstado, obterCasa, aoSelecionarModulo, aoAtual
       grupoCoberturaFundos.visible = true;
       telhaTranslucida.visible = false;
       telhaFundos.scale.z = 1.25;
-      telhaFundos.position.z = -8.6;
+      telhaFundos.position.z = -14.9;
     } else {
       grupoCoberturaFundos.visible = true;
       telhaTranslucida.visible = true;
       telhaFundos.scale.z = 1.0;
-      telhaFundos.position.z = -8.2;
+      telhaFundos.position.z = -14.5;
     }
 
     // Módulos
