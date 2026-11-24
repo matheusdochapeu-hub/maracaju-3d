@@ -1,0 +1,11 @@
+{
+  "name": "maracaju-3d",
+  "version": "3.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Gêmeo digital da Casa Maracaju 88: planta editável, interiores, captura guiada e sol real.",
+  "scripts": {
+    "test": "node --test --test-isolation=none test/*.test.mjs",
+    "serve": "python -m http.server 8088 --directory app"
+  }
+}

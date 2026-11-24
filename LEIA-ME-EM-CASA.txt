@@ -1,30 +1,50 @@
 =====================================================================
-  MARACAJU 3D — COMO RODAR EM CASA (CELULAR OU OUTRO COMPUTADOR)
+  MARACAJU 3D — COMO ABRIR EM CASA (CELULAR OU COMPUTADOR)
 =====================================================================
 
-OPCAO 1 — NO CELULAR HOJE MESMO (10 SEGUNDOS, SEM INSTALAR NADA!):
-  1. Abra https://app.netlify.com/drop no navegador (pode ser agora no trabalho).
-  2. Arraste APENAS a pasta "app" (que esta dentro deste pacote) para a pagina.
-  3. Em 10 segundos ele gera um link seguro https://...netlify.app
-  4. Mande esse link no seu WhatsApp -> abra no celular em casa!
-     (No link HTTPS funcionam: GPS ao vivo no quintal, camera direta para
-      o muro, simulador solar 3D, importacao de scans .glb e exportacao PNG!)
+OPCAO 1 — LINK FIXO (O MELHOR):
+  https://matheusdochapeu-hub.github.io/maracaju-3d/app/
+  Abra no celular e adicione à tela de início (Compartilhar → Adicionar à
+  Tela de Início). Funciona o GPS, a câmera e o simulador solar.
 
-OPCAO 2 — LINK PERMANENTE NO SEU GITHUB PAGES (matheusdochapeu-hub.github.io):
-  1. Crie um repositorio "maracaju-3d" no seu GitHub (publico).
-  2. Suba o conteudo da pasta "app/" na raiz do repositorio.
-  3. Em Settings -> Pages -> Deploy from branch "main" -> pronto!
-     Seu link fixo sera: https://matheusdochapeu-hub.github.io/maracaju-3d/
+OPCAO 2 — QUALQUER PC WINDOWS EM CASA, SEM INSTALAR NADA:
+  1. Extraia esta pasta em qualquer lugar.
+  2. Duplo clique em "ABRIR_MARACAJU_3D.bat".
+     - Com Python: abre o notebook e mostra o endereço para o celular
+       (mesma rede Wi-Fi).
+     - Sem Python: usa o servidor nativo do Windows.
 
-OPCAO 3 — EM QUALQUER COMPUTADOR WINDOWS EM CASA (OFFLINE, 1 CLIQUE):
-  1. Extraia o arquivo "maracaju-3d-portatil.zip" em qualquer pasta.
-  2. De DUPLO CLIQUE em "ABRIR_MARACAJU_3D.bat".
-     - Se o PC tiver Python: abre no PC E mostra o endereco Wi-Fi para o celular!
-     - Se o PC NAO tiver Python nem Node: ele usa o servidor nativo do Windows
-       automaticamente e abre o Maracaju 3D no navegador em 2 segundos!
+OPCAO 3 — PUBLICAR UMA CÓPIA RÁPIDA (10 segundos):
+  1. Abra https://app.netlify.com/drop
+  2. Arraste APENAS a pasta "app" para a página.
+  3. Use o link gerado no celular (é HTTPS, então a câmera funciona).
 
-DICA DE SINCRONIZACAO ENTRE COMPUTADORES / CELULAR:
-  - Clique em "JSON (baixar)" no topo para salvar seu cenario e mande no WhatsApp.
-  - Em casa ou no celular, clique em "JSON (subir)" para continuar exatamente
-    de onde parou!
+---------------------------------------------------------------------
+  O QUE FAZER PRIMEIRO NO APP
+---------------------------------------------------------------------
+  1. ABA INTERIORES
+     Confira as medidas de cada cômodo (a planta inicial é estimada).
+     Arraste na planta para ajustar, ou digite largura/profundidade.
+     Quando medir com trena, marque "Medidas conferidas".
+
+  2. ABA CAPTURA
+     Escolha a área, toque em "Fotografar" e faça ~8 fotos por cômodo
+     (uma a cada passo). Pode gravar um vídeo de caminhada também.
+     No fim, "Exportar pacote 3D" gera um .zip para o Scaniverse/Colab.
+
+  3. ABA CASA 3D
+     Teste o sol de verão e inverno, ligue/desligue módulos e veja a
+     cobertura dos fundos. Importe o scan .glb em "Scan 3D".
+
+  4. ABA DADOS
+     Veja o que falta, baixe a ficha em Markdown e o backup JSON.
+
+---------------------------------------------------------------------
+  ONDE FICAM AS FOTOS E AS MEDIDAS
+---------------------------------------------------------------------
+  - Tudo fica NO SEU APARELHO (memória do navegador). Nada é enviado
+    para servidor nenhum.
+  - Para trocar de celular/notebook: ABA DADOS → Backup (JSON).
+  - As fotos saem no pacote .zip da aba Captura (o backup JSON não
+    inclui as fotos, para o arquivo não ficar gigante).
 =====================================================================

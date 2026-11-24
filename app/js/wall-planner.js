@@ -1,10 +1,12 @@
 /**
- * Estúdio do Muro (Prévia Visual sobre Foto Real + Leitor EXIF GPS/Bússola em JS Puro)
+ * Estúdio de prévia sobre foto real (aberto pela aba Captura).
  * Permite subir fotos tiradas no celular (muro 15m, quintal ou interiores),
  * ler coordenadas GPS/azimute EXIF, calibrar escala real em metros,
  * arrastar/redimensionar prévias de plantas, irrigação, tanques e móveis,
  * e exportar imagem PNG para aprovação conjunta com a Scarlet.
  */
+
+import { parseJpegExif } from './exif.js';
 
 const PRESET_ITEMS = [
   { id: 'setor_a', label: '🌿 Floreira Setor A (Seco: Alecrim/Tomilho)', w: 180, h: 65, color: '#eab308', fill: 'rgba(234,179,8,0.28)' },
@@ -17,122 +19,6 @@ const PRESET_ITEMS = [
   { id: 'emergencia', label: '🚨 Armário Emergência 72h', w: 140, h: 185, color: '#ef4444', fill: 'rgba(239,68,68,0.28)' },
 ];
 
-/**
- * Leitor leve de EXIF JPEG (GPS Lat/Lon + GPSImgDirection + DateTimeOriginal) sem libs externas.
- */
-export function parseJpegExif(arrayBuffer) {
-  const view = new DataView(arrayBuffer);
-  if (view.byteLength < 12 || view.getUint16(0, false) !== 0xffd8) {
-    return null;
-  }
-
-  let offset = 2;
-  while (offset + 4 < view.byteLength) {
-    const marker = view.getUint16(offset, false);
-    offset += 2;
-    if (marker === 0xffe1) {
-      // APP1 EXIF
-      const length = view.getUint16(offset, false);
-      if (offset + 8 > view.byteLength) return null;
-      const exifHeader =
-        String.fromCharCode(view.getUint8(offset + 2)) +
-        String.fromCharCode(view.getUint8(offset + 3)) +
-        String.fromCharCode(view.getUint8(offset + 4)) +
-        String.fromCharCode(view.getUint8(offset + 5));
-      if (exifHeader !== 'Exif') {
-        offset += length;
-        continue;
-      }
-
-      const tiffStart = offset + 8;
-      const little = view.getUint16(tiffStart, false) === 0x4949;
-      const firstIfdOffset = view.getUint32(tiffStart + 4, little);
-      const ifd0 = readIfd(view, tiffStart, tiffStart + firstIfdOffset, little);
-
-      const result = { lat: null, lng: null, compass: null, date: null };
-      if (ifd0[0x0132]) result.date = ifd0[0x0132];
-
-      if (ifd0[0x8769]) {
-        const exifIfd = readIfd(view, tiffStart, tiffStart + ifd0[0x8769], little);
-        if (exifIfd[0x9003]) result.date = exifIfd[0x9003];
-      }
-
-      if (ifd0[0x8825]) {
-        const gpsIfd = readIfd(view, tiffStart, tiffStart + ifd0[0x8825], little);
-        if (gpsIfd[0x0002] && gpsIfd[0x0001]) {
-          const lat = dmsToDecimal(gpsIfd[0x0002], gpsIfd[0x0001]);
-          if (Number.isFinite(lat)) result.lat = lat;
-        }
-        if (gpsIfd[0x0004] && gpsIfd[0x0003]) {
-          const lng = dmsToDecimal(gpsIfd[0x0004], gpsIfd[0x0003]);
-          if (Number.isFinite(lng)) result.lng = lng;
-        }
-        if (typeof gpsIfd[0x0011] === 'number' && Number.isFinite(gpsIfd[0x0011])) {
-          result.compass = +gpsIfd[0x0011].toFixed(1);
-        }
-      }
-      return result;
-    } else if ((marker & 0xff00) !== 0xff00) {
-      break;
-    } else {
-      const size = view.getUint16(offset, false);
-      offset += size;
-    }
-  }
-  return null;
-}
-
-function readIfd(view, tiffStart, dirStart, little) {
-  const tags = {};
-  if (dirStart + 2 > view.byteLength) return tags;
-  const entries = view.getUint16(dirStart, little);
-  for (let i = 0; i < entries; i++) {
-    const entryOffset = dirStart + 2 + i * 12;
-    if (entryOffset + 12 > view.byteLength) break;
-    const tag = view.getUint16(entryOffset, little);
-    const type = view.getUint16(entryOffset + 2, little);
-    const count = view.getUint32(entryOffset + 4, little);
-    const valueOffsetField = entryOffset + 8;
-
-    if (type === 2) {
-      // ASCII
-      const strStart = count <= 4 ? valueOffsetField : tiffStart + view.getUint32(valueOffsetField, little);
-      if (strStart + count <= view.byteLength) {
-        let s = '';
-        for (let c = 0; c < count - 1; c++) s += String.fromCharCode(view.getUint8(strStart + c));
-        tags[tag] = s.trim();
-      }
-    } else if (type === 4 && count === 1) {
-      tags[tag] = view.getUint32(valueOffsetField, little);
-    } else if (type === 5) {
-      // RATIONAL
-      const ratStart = tiffStart + view.getUint32(valueOffsetField, little);
-      if (ratStart + count * 8 <= view.byteLength) {
-        if (count === 1) {
-          const n = view.getUint32(ratStart, little);
-          const d = view.getUint32(ratStart + 4, little);
-          tags[tag] = d ? n / d : 0;
-        } else {
-          const arr = [];
-          for (let r = 0; r < count; r++) {
-            const n = view.getUint32(ratStart + r * 8, little);
-            const d = view.getUint32(ratStart + r * 8 + 4, little);
-            arr.push(d ? n / d : 0);
-          }
-          tags[tag] = arr;
-        }
-      }
-    }
-  }
-  return tags;
-}
-
-function dmsToDecimal(dms, ref) {
-  if (!Array.isArray(dms) || dms.length < 3) return NaN;
-  let dec = dms[0] + dms[1] / 60 + dms[2] / 3600;
-  if (ref === 'S' || ref === 'W') dec = -dec;
-  return +dec.toFixed(6);
-}
 
 export function initWallPlanner(toastFn) {
   const canvas = document.getElementById('wallCanvas');
@@ -276,8 +162,8 @@ export function initWallPlanner(toastFn) {
     itemsListEl.innerHTML = '';
     items.forEach((it, idx) => {
       const div = document.createElement('div');
-      div.className = 'module-item' + (idx === selectedIdx ? ' selected' : '');
-      div.innerHTML = `<span class="dot" style="background:${it.color}"></span><div class="module-info"><div class="title">${it.label}</div></div>`;
+      div.className = 'comodo-item' + (idx === selectedIdx ? ' ativo' : '');
+      div.innerHTML = `<span class="ponto" style="background:${it.color}"></span><div class="texto"><div class="nome">${it.label}</div></div>`;
       div.addEventListener('click', () => {
         selectedIdx = idx;
         syncSelectedUI();

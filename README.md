@@ -1,86 +1,122 @@
-# 05 — Scanner 3D & Gêmeo Digital Geolocalizado (Casa Maracaju 88)
+# 05 — Maracaju 3D · Gêmeo digital da Casa 88
 
-> **Status:** Aplicativo 3D interativo + pipeline open-source (GitHub) + Estúdio de Prévias do Muro prontos para uso  
-> **Local de referência:** Rua Maracaju, 88 — Vila Tibério, Ribeirão Preto - SP (`-21,1742° S, -47,8339° W` | Eixo `~40° SO → NE`)  
-> **Compatibilidade:** Celular (Android/iOS) + Notebook (inclusive com GPU integrada Intel HD 530 — sem exigir placa NVIDIA)
-
----
-
-## 1. Objetivo do Projeto
-
-Criar o **Gêmeo Digital 3D Geolocalizado** da **Casa Maracaju 88** para:
-1. **Escanear a casa, muros, quintal e interiores** usando o celular ou notebook e cruzar os modelos com a **geolocalização real (`-21,1742° S, -47,8339° W`)** e a **trajetória real do sol em Ribeirão Preto** (365 dias × 24h).
-2. **Gerar prévias visuais antes de furar paredes, construir ou comprar equipamentos** — integrando:
-   - **Projeto 01 (`01-estacao-meteorologica-windy`)** + **Projeto 02 (`02-rede-mesh`)**: mastro no telhado, orientação Norte do painel solar 30W e linha de visada LoRa 915 MHz.
-   - **Projeto 03 (`03-irrigacao-inteligente`)**: horta/flores no muro esquerdo de 15 m (Setores A/B/C) + pergolado de uvas e treliça de cabaça no canteiro frontal 3×2 m.
-   - **Projeto 04 (`04-galinheiro-biofabrica`)**: galinheiro elevado + piquete + torre de tenébrios (na sombra fresca!) + tanque de algas/Azolla.
-   - **Novos módulos do ecossistema integrado:** **Tanque de Peixes / Aquaponia**, **Composteira 3 Baias**, e a **Área Coberta dos Fundos (16 m²+)** dividida em **Área de Churrasco + Oficina/Bancada de Ferramentas + Estação de Emergência 72h**.
-3. **Planejamento em conjunto com a Scarlet (Interiores & Reformas):** modo **Raio-X / Planta Baixa** no 3D para avaliar luz natural, calor nos cômodos e testar ideias internas antes da obra, além do **Estúdio do Muro** para simular visualmente plantas e estruturas diretamente **sobre as fotos reais tiradas no celular**.
+> **O que é:** um app web (sem build, sem servidor) para **medir, fotografar e simular** a Casa Maracaju 88 antes de reformar.
+> **Onde:** Rua Maracaju, 88 — Vila Tibério, Ribeirão Preto/SP · `-21,1742° S, -47,8339° W` · eixo do lote `~40°`
+> **Status:** app v3 — planta editável, interiores navegáveis, captura guiada com o celular e sol real. Testado no notebook e pensado para o celular em casa.
 
 ---
 
-## 2. Arquivos e Ferramentas Incluídos Neste Projeto
+## O que dá para fazer
 
-| Arquivo / Pasta | Função |
+| Pergunta | Onde responder |
 | :--- | :--- |
-| [`PLANO_MESTRE_ECOSSISTEMA.md`](./PLANO_MESTRE_ECOSSISTEMA.md) | Plano diretor "Infraestrutura Primeiro, Biologia Depois" integrando cobertura dos fundos, oficina de ferramentas, plano de emergência 72h, peixes, galinhas, composteira, horta, clima e interiores. |
-| [`GUIA_CAPTURA_E_RECONSTRUCAO_3D.md`](./GUIA_CAPTURA_E_RECONSTRUCAO_3D.md) | Passo a passo para fotografar/escanear a casa e o muro no celular, calibrar escala e Norte Verdadeiro, e gerar arquivos `.glb`/`.ply` com projetos open-source do GitHub. |
-| [`run_maracaju_3d.py`](./run_maracaju_3d.py) | Servidor web local (Python puro, zero dependências extras). Abre o simulador no notebook **e** libera acesso pelo celular na mesma rede Wi-Fi! |
-| [`app/`](./app/index.html) | Aplicativo Web **Maracaju 3D**: Simulador Solar 3D (`Three.js` + `SunCalc`), importador de scans `.glb/.obj/.ply`, catálogo arrastável dos projetos e **Estúdio do Muro (Prévia sobre Foto Real com leitura EXIF GPS)**. |
-| [`tools/exif_geo_mapper.py`](./tools/exif_geo_mapper.py) | Script Python que lê pastas de fotos do celular em `capturas/`, extrai GPS/Bússola EXIF e posiciona cada foto no mapa georreferenciado da Casa Maracaju 88. |
-| [`tools/colab_3d_reconstruct.py`](./tools/colab_3d_reconstruct.py) | Receita pronta para rodar **VGGT / MASt3R** na GPU gratuita do Google Colab (resolve a falta de GPU NVIDIA no notebook) e baixar o `.glb` da casa em minutos. |
-| `capturas/muro/` e `capturas/scans_3d/` | Pastas prontas para guardar as fotos que você tirar em casa e os modelos 3D gerados. |
+| Como é a casa por dentro? | **Interiores** → 3D com corte, planta baixa cotada e passeio em primeira pessoa. |
+| Este cômodo é quente? Entra sol? | **Interiores** → "Sol no cômodo" calcula horas de sol direto e de tarde com as janelas reais. |
+| E a área externa? | **Casa 3D** → módulos do quintal, muro de 15 m, cobertura dos fundos e sol de verão/inverno. |
+| Como eu levanto a casa de verdade? | **Captura** → fotos e vídeos guiados por área, com pacote `.zip` pronto para virar 3D. |
+| O que ainda falta medir? | **Dados** → progresso, ficha da casa em Markdown e lista de pendências. |
 
----
+## As 4 abas
 
-## 3. Projetos Open-Source do GitHub Selecionados (Arquitetura em 4 Etapas)
+1. **🏠 Casa 3D** — o lote inteiro: muros, casa, cobertura dos fundos, 11 módulos do ecossistema e o sol real de Ribeirão Preto. Clique num módulo para ver quantas horas de sol ele pega e mover no terreno.
+2. **🛋️ Interiores** — a casa montada a partir de um **modelo de cômodos editável**: paredes, portas, janelas, pisos e móveis de referência. Três modos: **3D** (corte com o telhado escondido), **Planta** (arraste e redimensione os cômodos) e **Passeio** (ande por dentro).
+3. **📷 Captura** — câmera do celular dentro do app, gravação de vídeo, galeria local e **exportação de pacote 3D** com fotos organizadas por área + manifesto de medidas.
+4. **📋 Dados** — percentual do levantamento, ficha da casa, envelope (largura/comprimento/pé-direito), pendências e backup.
 
-Após analisar o hardware local (**Intel HD Graphics 530** — sem GPU NVIDIA CUDA), a pilha open-source foi escolhida para funcionar **sem travamentos** entre **celular + notebook + GPU gratuita na nuvem (Colab)** quando necessário:
+## Como rodar
 
-| Etapa | Projeto / Repositório GitHub | Licença / Custo | Papel no Ecossistema Maracaju 88 |
-| :--- | :--- | :---: | :--- |
-| **1. Captura Mobile + GPS** | [**Open3Dmap**](https://github.com/x4dqn/Open3Dmap) + apps de captura rápida (**Scaniverse** / **KIRI Engine** / câmera nativa c/ GPS) | Open Source / Gratuito | Captura fotos com EXIF GPS + bússola ou gera malha `.glb` / Gaussian Splat direto no celular (Scaniverse roda 100% no aparelho, grátis). |
-| **2. Reconstrução 3D por IA (Fotos → `.glb`)** | [**VGGT (`facebookresearch/vggt`)**](https://github.com/facebookresearch/vggt) e [**MASt3R (`naver/mast3r`)**](https://github.com/naver/mast3r) | Open Source (MIT / CC) | Estado da arte em visão 3D: converte 10 a 60 fotos comuns de celular em modelo 3D `.glb` em segundos rodando no **Google Colab gratuito (GPU T4)**. |
-| **2B. Gaussian Splatting (WebGPU)** | [**Brush (`ArthurBrussee/brush`)**](https://github.com/ArthurBrussee/brush) + [**GaussianSplats3D (`mkkellogg/GaussianSplats3D`)**](https://github.com/mkkellogg/GaussianSplats3D) | Open Source (Apache/MIT) | Treina e renderiza reconstruções fotorrealistas (`.ply`/`.splat`) usando WebGPU/Three.js sem exigir CUDA. |
-| **2C. Fotogrametria Georreferenciada (CPU)** | [**WebODM (`OpenDroneMap/WebODM`)**](https://github.com/OpenDroneMap/WebODM) + [**COLMAP (`colmap/colmap`)**](https://github.com/colmap/colmap) | Open Source (AGPL/BSD) | Lê GPS EXIF das fotos e gera ortofoto + modelo 3D métrico georreferenciado rodando em CPU (Docker). |
-| **3. Planta Interna & GIS** | **Sweet Home 3D** + [**BlenderGIS (`domlysz/BlenderGIS`)**](https://github.com/domlysz/BlenderGIS) | Open Source (GPL) | Levíssimos no notebook: ideais para desenhar o interior da casa com a Scarlet e exportar `.obj`/`.glb` direto para o **Maracaju 3D**. |
-| **4. Cruzamento Solar & Simulador Local** | [**SunCalc (`mourner/suncalc`)**](https://github.com/mourner/suncalc) + **Three.js** *(já embutidos no nosso app `app/`)* | Open Source (MIT/BSD) | Calcula azimute e altura solar reais de `-21,1742° S, -47,8339° W` e projeta sombras em tempo real sobre o lote e seus scans 3D. |
+**No celular ou em qualquer lugar (jeito mais simples):**
+abra o link publicado — <https://matheusdochapeu-hub.github.io/maracaju-3d/app/>.
 
-> [!NOTE]
-> **Por que NÃO usar Meshroom (AliceVision) localmente neste notebook?**  
-> A etapa *DepthMap* do Meshroom exige GPU **NVIDIA com CUDA**. Como o notebook usa **Intel HD Graphics 530**, a melhor rota sem gastar R$ 1 é: **Scaniverse no celular** (para escaneamentos rápidos em `.glb`) ou **VGGT / MASt3R no Google Colab gratuito** (para transformar um conjunto de fotos do muro/quintal em `.glb` com alta fidelidade).
-
----
-
-## 4. Como Rodar o Aplicativo "Maracaju 3D" Agora (Notebook e Celular)
-
-### No Notebook (Windows PowerShell)
+**No notebook, sem instalar nada:**
 ```powershell
 cd "c:\Users\matheus.ribeiro\Desktop\Matheus\5. IA\4. Outros Projetos e Hardware\projetos-hardware\05-gemeo-digital-scanner-3d"
+python -m http.server 8088 --directory app
+# abra http://127.0.0.1:8088
+```
+> A câmera do navegador exige `https://` ou `localhost`. No GitHub Pages funciona; em `http://192.168.x.x` funciona o resto, mas a câmera cai no modo "câmera nativa do celular".
+
+**Como app na rede Wi-Fi (celular no quintal):**
+```powershell
 python run_maracaju_3d.py
 ```
-O terminal exibirá automaticamente dois endereços:
-- **No notebook:** `http://127.0.0.1:8088`
-- **No celular (mesmo Wi-Fi):** `http://<IP-DO-SEU-NOTEBOOK>:8088` *(você pode caminhar no quintal com o celular na mão olhando as sombras e os módulos!)*
+O terminal mostra o endereço do notebook e o do celular na mesma rede.
 
-### Como Usar as 3 Abas do App
-1. **🌍 Gêmeo Digital 3D & Sol Real:**
-   - Escolha a data (**Verão 21/Dez**, **Equinócio 21/Mar**, **Inverno 21/Jun** ou **Hoje**) e arraste o horário (ou clique em **▶ Animar Sol**) para ver exatamente onde o sol bate no muro de 15 m, no canteiro 3×2 m, na área dos fundos, no tanque de peixes e nas janelas da casa.
-   - Ligue/desligue ou clique em qualquer módulo (Estação Meteorológica, Antena Mesh, Horta 15m, Galinheiro, Tanque de Peixes, Composteira, Churrasco, Oficina de Ferramentas, Estação Emergência 72h) para **mover no terreno (X, Z, Rotação)** e comparar cenários!
-   - Clique em **📦 Importar Scan 3D (`.glb`/`.obj`/`.ply`)** para carregar o modelo escaneado real da sua casa/muro sobre o terreno georreferenciado.
-   - Use **🏠 Modo Raio-X (Interiores)** para conversar com a Scarlet sobre reformas internas e insolação nos cômodos.
-2. **🧱 Estúdio do Muro (Prévia sobre Foto Real):**
-   - Carregue a foto do muro (ou qualquer parede/cômodo) que você bater em casa.
-   - O sistema lê automaticamente o **EXIF GPS e a Bússola** da foto (quando ativados na câmera).
-   - Arraste e redimensione prévias de **Floreiras, Vasos, Treliça, Linha de Gotejamento (Setores A/B/C), Bancada, Tanque ou Prateleiras** direto em cima da foto real e exporte em **PNG** para validar antes de comprar ou furar a parede!
-3. **🛰️ Mapa de Capturas & Pipeline GitHub:**
-   - Exibe todas as fotos mapeadas em `capturas/` pelo script `tools/exif_geo_mapper.py`, mostra a cobertura espacial e fornece o roteiro de 1 clique para gerar o 3D no Colab.
+## O modelo da casa (o coração do projeto)
 
----
+A planta não está mais chumbada no código. Tudo vive em `app/js/casa-modelo.js` e é editável no app:
 
-## 5. Próximos Passos Práticos em Casa (Checklist Rápido)
-- [ ] Ativar **"Salvar localização (GPS)"** no app da câmera do celular antes de bater as fotos.
-- [ ] Bater fotos do **muro esquerdo (15 m)** em sequência (com 1 trena aberta ou folha A4 colada no muro para referência de escala) e salvar em `capturas/muro/`.
-- [ ] Rodar `python tools/exif_geo_mapper.py` para georreferenciar todas as fotos automaticamente.
-- [ ] Abrir o **Estúdio do Muro** no app e testar as prévias das plantas e dos setores de irrigação com a Scarlet.
-- [ ] Fazer um scan 3D rápido do quintal dos fundos (16 m²) com **Scaniverse** (exportar `.glb`) ou enviar 25–40 fotos pelo roteiro **VGGT/MASt3R** e importar no **Maracaju 3D** antes de fechar o desenho da cobertura dos fundos.
+```js
+{
+  envelope: { x0, x1, z0, z1, altura, peDireito, espExterna, espInterna },
+  rooms: [{
+    id, nome, tipo, x, z, w, d,            // retângulo no referencial do lote
+    piso, status: 'estimado' | 'medido',
+    portas:  [{ parede, inicio, largura, altura }],
+    janelas: [{ parede, inicio, largura, altura, peitoril }],
+    notas
+  }]
+}
+```
+
+- O **3D**, a **planta 2D** e a **ficha** são três leituras do mesmo objeto: mexeu na planta, o 3D e as contas mudam juntos.
+- As paredes são geradas automaticamente: paredes compartilhadas viram uma só, portas e janelas viram vãos reais (com peitoril e verga).
+- A planta de partida é **estimada** a partir da casa vagão (~4,8 × 15 m). Cada cômodo tem um status; quando você mede com trena, marca como **medido** e o cálculo de sol passa a valer mais.
+- O sol do cômodo é calculado por **raycasting** contra as paredes, janelas e telhado — não é chute.
+
+## Captura → modelo 3D
+
+1. Abra **Captura**, escolha a área e toque em **Fotografar**. A câmera traseira abre com guia de enquadramento.
+2. Faça ~8 fotos por cômodo (uma a cada passo, 70% de sobreposição) e, se quiser, grave um **vídeo de caminhada** de 30–90 s.
+3. Toque em **Exportar pacote 3D**. O `.zip` traz `fotos/<área>/...`, `videos/...`, `manifest.json` (medidas dos cômodos) e `LEIA-ME.txt`.
+4. Transforme em modelo:
+   - **Scaniverse** (grátis, processa no celular) → exportar `.glb` → importar em **Casa 3D**.
+   - **Colab + VGGT/MASt3R** → use `tools/colab_3d_reconstruct.py` (GPU T4 gratuita). O notebook local não tem CUDA.
+   - **Sweet Home 3D** para interiores com medidas exatas → exportar `.obj`.
+5. Importe o arquivo em **Casa 3D → Scan 3D** e ajuste escala/rotação/posição.
+
+Passo a passo detalhado de campo: [`GUIA_CAPTURA_E_RECONSTRUCAO_3D.md`](./GUIA_CAPTURA_E_RECONSTRUCAO_3D.md).
+
+## Onde ficam os dados
+
+- Medidas, módulos e ajustes: `localStorage` do navegador (chave `maracaju3d_estado_v3`).
+- Fotos e vídeos: `IndexedDB` do aparelho (nada é enviado para servidor).
+- Backup para trocar de aparelho: **Dados → Backup** (JSON). Fotos saem no pacote `.zip` da Captura.
+
+> Cenários da versão anterior (`maracaju3d_state_v1`) são migrados automaticamente na primeira abertura.
+
+## Testes
+
+```powershell
+node --test --test-isolation=none test/*.test.mjs
+```
+Cobrem o modelo da casa (paredes, vãos, completude, colisão), o gerador de ZIP e o leitor de EXIF/GPS. Não dependem de navegador.
+
+## Arquivos
+
+| Arquivo | Papel |
+| :--- | :--- |
+| `app/index.html` | Estrutura das 4 abas, modais de câmera/foto/ajuda e estúdio de prévia. |
+| `app/css/style.css` | Tema escuro, layout de 3 colunas no desktop e navegação inferior no celular. |
+| `app/js/main.js` | Estado, abas, sol, terreno, módulos, scan e backup. |
+| `app/js/mundo.js` | Cena Three.js: lote, módulos, telhado, satélite e sol. |
+| `app/js/casa-modelo.js` | Modelo puro da casa: cômodos, paredes, vãos, áreas, completude, colisão. |
+| `app/js/casa-3d.js` | Constrói a casa em Three.js a partir do modelo (inclui móveis de referência). |
+| `app/js/interiores.js` | Lista/editor de cômodos, planta 2D editável e passeio. |
+| `app/js/captura.js` | Câmera, MediaRecorder, galeria IndexedDB e pacote ZIP. |
+| `app/js/levantamento.js` | Progresso, ficha, pendências, envelope e backups. |
+| `app/js/zip.js` | Gerador de `.zip` sem biblioteca externa. |
+| `app/js/exif.js` | GPS/bússola/data do EXIF. |
+| `app/js/suncalc.js` | Motor solar (NOAA). |
+| `app/js/wall-planner.js` | Estúdio de prévia sobre foto real (muro, plantas, móveis). |
+| `tools/exif_geo_mapper.py` | Opcional: varre `capturas/`, extrai GPS e gera manifesto geográfico. |
+| `tools/colab_3d_reconstruct.py` | Receita pronta de VGGT no Colab. |
+| `run_maracaju_3d.py` | Servidor local para abrir no celular pela mesma rede Wi-Fi. |
+
+## Próximos passos em casa
+
+- [ ] Medir largura, profundidade e pé-direito de cada cômodo e marcar como **medido**.
+- [ ] Conferir portas e janelas (largura, altura, peitoril) — hoje são estimativas.
+- [ ] Fotografar cada cômodo (8 fotos) e os fundos (12 fotos).
+- [ ] Exportar o pacote e gerar o `.glb` no Scaniverse ou no Colab.
+- [ ] Comparar sol de verão × inverno antes de fechar a cobertura dos fundos.
