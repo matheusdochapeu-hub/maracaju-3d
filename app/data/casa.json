@@ -1,0 +1,197 @@
+{
+  "versao": 1,
+  "envelope": {
+    "x0": -1.45,
+    "x1": 3.35,
+    "z0": -6.5,
+    "z1": 8.5,
+    "altura": 2.9,
+    "peDireito": 2.7,
+    "espExterna": 0.18,
+    "espInterna": 0.1
+  },
+  "rooms": [
+    {
+      "id": "sala",
+      "nome": "Sala",
+      "tipo": "sala",
+      "x": -1.35,
+      "z": 4.6,
+      "w": 2.95,
+      "d": 3.8,
+      "cor": "#38bdf8",
+      "piso": "porcelanato",
+      "status": "estimado",
+      "notas": "",
+      "portas": [
+        {
+          "parede": "direita",
+          "inicio": 1.2,
+          "largura": 0.9,
+          "altura": 2.1
+        },
+        {
+          "parede": "frente",
+          "inicio": 0.35,
+          "largura": 0.9,
+          "altura": 2.1,
+          "externa": true
+        }
+      ],
+      "janelas": [
+        {
+          "parede": "esquerda",
+          "inicio": 0.9,
+          "largura": 1.4,
+          "altura": 1.2,
+          "peitoril": 1
+        }
+      ]
+    },
+    {
+      "id": "quarto1",
+      "nome": "Quarto 1",
+      "tipo": "quarto",
+      "x": -1.35,
+      "z": 1.6,
+      "w": 2.95,
+      "d": 3,
+      "cor": "#a78bfa",
+      "piso": "madeira",
+      "status": "estimado",
+      "notas": "",
+      "portas": [
+        {
+          "parede": "direita",
+          "inicio": 0.7,
+          "largura": 0.8,
+          "altura": 2.1
+        }
+      ],
+      "janelas": [
+        {
+          "parede": "esquerda",
+          "inicio": 0.8,
+          "largura": 1.2,
+          "altura": 1.1,
+          "peitoril": 1
+        }
+      ]
+    },
+    {
+      "id": "banheiro",
+      "nome": "Banheiro",
+      "tipo": "banheiro",
+      "x": -1.35,
+      "z": -0.4,
+      "w": 2.95,
+      "d": 2,
+      "cor": "#22d3ee",
+      "piso": "ceramica",
+      "status": "estimado",
+      "notas": "",
+      "portas": [
+        {
+          "parede": "direita",
+          "inicio": 0.9,
+          "largura": 0.7,
+          "altura": 2.1
+        }
+      ],
+      "janelas": [
+        {
+          "parede": "esquerda",
+          "inicio": 0.9,
+          "largura": 0.6,
+          "altura": 0.6,
+          "peitoril": 1.6
+        }
+      ]
+    },
+    {
+      "id": "quarto2",
+      "nome": "Quarto 2",
+      "tipo": "quarto",
+      "x": -1.35,
+      "z": -3.6,
+      "w": 2.95,
+      "d": 3.2,
+      "cor": "#c084fc",
+      "piso": "madeira",
+      "status": "estimado",
+      "notas": "",
+      "portas": [
+        {
+          "parede": "direita",
+          "inicio": 0.9,
+          "largura": 0.8,
+          "altura": 2.1
+        }
+      ],
+      "janelas": [
+        {
+          "parede": "esquerda",
+          "inicio": 0.8,
+          "largura": 1.2,
+          "altura": 1.1,
+          "peitoril": 1
+        }
+      ]
+    },
+    {
+      "id": "cozinha",
+      "nome": "Cozinha / copa",
+      "tipo": "cozinha",
+      "x": -1.35,
+      "z": -6.4,
+      "w": 2.95,
+      "d": 2.8,
+      "cor": "#fbbf24",
+      "piso": "ceramica",
+      "status": "estimado",
+      "notas": "",
+      "portas": [
+        {
+          "parede": "direita",
+          "inicio": 0.8,
+          "largura": 0.8,
+          "altura": 2.1
+        },
+        {
+          "parede": "fundo",
+          "inicio": 0.4,
+          "largura": 0.9,
+          "altura": 2.1,
+          "externa": true
+        }
+      ],
+      "janelas": [
+        {
+          "parede": "esquerda",
+          "inicio": 0.7,
+          "largura": 1.2,
+          "altura": 1.1,
+          "peitoril": 1.1
+        }
+      ]
+    },
+    {
+      "id": "corredor",
+      "nome": "Corredor",
+      "tipo": "circulacao",
+      "x": 1.6,
+      "z": -6.4,
+      "w": 1.65,
+      "d": 14.8,
+      "cor": "#94a3b8",
+      "piso": "ceramica",
+      "status": "estimado",
+      "notas": "",
+      "portas": [],
+      "janelas": []
+    }
+  ],
+  "atualizadoEm": null,
+  "origem": "estimado",
+  "fonte": "Planta estimada da casa vagão (4,80 × 15,00 m). Substituir pela planta real assim que ela chegar."
+}

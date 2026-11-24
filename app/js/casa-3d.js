@@ -80,7 +80,7 @@ function criarEtiqueta(nome, areaTxt, cor) {
   const material = new THREE.SpriteMaterial({ map: textura, transparent: true, depthTest: false });
   material.userData.proprio = true;
   const sprite = new THREE.Sprite(material);
-  sprite.scale.set(2.7, 0.9, 1);
+  sprite.scale.set(1.9, 0.63, 1);
   sprite.renderOrder = 10;
   return sprite;
 }

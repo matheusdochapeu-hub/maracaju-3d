@@ -158,6 +158,8 @@ export function criarCasaPadrao() {
   ];
   return {
     versao: 1,
+    origem: 'estimado',
+    fonte: 'Planta estimada da casa vagão (4,80 × 15,00 m). Substituir pela planta real.',
     envelope: { ...ENVELOPE_PADRAO },
     rooms,
     atualizadoEm: null,
@@ -232,7 +234,14 @@ export function normalizarCasa(bruta) {
     });
 
   if (rooms.length === 0) return padrao;
-  return { versao: 1, envelope: env, rooms, atualizadoEm: bruta.atualizadoEm || null };
+  return {
+    versao: 1,
+    origem: typeof bruta.origem === 'string' && bruta.origem ? bruta.origem : 'sem-origem',
+    fonte: typeof bruta.fonte === 'string' ? bruta.fonte.slice(0, 300) : '',
+    envelope: env,
+    rooms,
+    atualizadoEm: bruta.atualizadoEm || null,
+  };
 }
 
 function normalizarAberturas(lista, ehJanela, padrao) {

@@ -375,6 +375,11 @@ textarea {
   gap: 8px;
 }
 
+.card h2.h2-editor {
+  justify-content: flex-start;
+  gap: 6px;
+}
+
 .card h3,
 .subtitulo {
   font-size: 11.5px;
@@ -956,6 +961,13 @@ input[type='checkbox'] {
   min-height: 28px;
   padding: 4px 6px;
   font-size: 11.5px;
+}
+
+input:disabled,
+select:disabled,
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 input[type='file'] {

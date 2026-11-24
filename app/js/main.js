@@ -7,6 +7,7 @@
 
 import { MODULOS, GRUPOS_MODULOS, SITE, CHAVE_ESTADO, CHAVE_ESTADO_ANTIGO, CHAVE_DICAS, VERSAO, ROTEIRO_CAPTURA } from './config.js';
 import { criarCasaPadrao, normalizarCasa, completudeCasa } from './casa-modelo.js';
+import { normalizarFundo } from './planta.js';
 import { criarMundo } from './mundo.js';
 import { iniciarInteriores } from './interiores.js';
 import { iniciarCaptura } from './captura.js';
@@ -14,6 +15,28 @@ import { iniciarLevantamento } from './levantamento.js';
 import { baixarArquivo, escaparHtml, metros } from './utils.js';
 
 // ============================ ESTADO ============================
+
+/**
+ * A planta do projeto é um arquivo de dados (app/data/casa.json). Assim, quando
+ * a planta real chegar, dá para trocar o modelo sem mexer no código.
+ */
+async function lerCasaDoProjeto() {
+  try {
+    const resposta = await fetch('./data/casa.json', { cache: 'no-store' });
+    if (!resposta.ok) return null;
+    const bruto = await resposta.json();
+    const casa = normalizarCasa(bruto);
+    if (bruto.origem) casa.origem = String(bruto.origem).slice(0, 40);
+    if (bruto.fonte) casa.fonte = String(bruto.fonte).slice(0, 300);
+    casa.atualizadoEm = bruto.atualizadoEm || null;
+    return casa;
+  } catch {
+    return null;
+  }
+}
+
+const casaDoProjeto = await lerCasaDoProjeto();
+
 function modulosPadrao() {
   const saida = {};
   for (const [id, cfg] of Object.entries(MODULOS)) {
@@ -43,7 +66,8 @@ function estadoPadrao() {
     areaCamera: 'sala',
     plantaEditar: false,
     modulos: modulosPadrao(),
-    casa: criarCasaPadrao(),
+    casa: casaDoProjeto ? normalizarCasa(casaDoProjeto) : criarCasaPadrao(),
+    plantaFundo: normalizarFundo(),
     atualizadoEm: null,
   };
 }
@@ -103,6 +127,7 @@ function carregarEstado() {
     ...salvo,
     modulos: { ...padrao.modulos, ...(salvo.modulos || {}) },
     casa: normalizarCasa(salvo.casa),
+    plantaFundo: normalizarFundo(salvo.plantaFundo),
   };
   if (!['casa3d', 'interiores', 'captura', 'levantamento'].includes(estado.aba)) estado.aba = 'casa3d';
   if (!['3d', 'planta', 'passeio'].includes(estado.modo)) estado.modo = '3d';
@@ -223,6 +248,9 @@ const levantamento = iniciarLevantamento({
   abrirCamera: (area) => captura?.abrirCamera(area),
   exportarJson: () => exportarJson(),
   importarJson: (arquivo) => importarJson(arquivo),
+  exportarModelo: () => exportarModelo(),
+  importarModelo: (arquivo) => importarModelo(arquivo),
+  carregarModeloDoProjeto: () => carregarModeloDoProjeto(),
   resetar: () => resetar(),
 });
 
@@ -264,6 +292,7 @@ function irParaAba(aba) {
     if (canvas3d.parentElement !== destino) destino.prepend(canvas3d);
     requestAnimationFrame(() => {
       mundo.resize();
+      atualizarTudo();
       if (aba === 'interiores') {
         interiores.aplicarModo();
         interiores.atualizarSol();
@@ -634,6 +663,55 @@ function exportarJson() {
   mostrarToast('Backup baixado. Guarde no WhatsApp ou no Drive para levar a outro aparelho.');
 }
 
+function exportarModelo() {
+  const dados = {
+    ...casa,
+    atualizadoEm: new Date().toISOString(),
+  };
+  baixarArquivo(
+    `maracaju-88-planta-${new Date().toISOString().slice(0, 10)}.json`,
+    new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' })
+  );
+  mostrarToast('Planta baixada em JSON. Edite as medidas e importe de volta.');
+}
+
+async function importarModelo(arquivo) {
+  try {
+    const bruto = JSON.parse(await arquivo.text());
+    const nova = normalizarCasa(bruto.casa || bruto);
+    if (!nova.rooms.length) throw new Error('sem cômodos');
+    if (!confirm('Substituir a planta atual por esta? As medidas atuais serão perdidas (o backup JSON continua valendo).')) return;
+    Object.assign(casa, nova);
+    casa.origem = bruto.origem || 'importado';
+    casa.fonte = bruto.fonte || arquivo.name;
+    casa.atualizadoEm = new Date().toISOString();
+    estado.casa = casa;
+    if (!casa.rooms.some((r) => r.id === estado.comodoSelecionado)) estado.comodoSelecionado = casa.rooms[0].id;
+    mundo.definirCasa(casa);
+    sincronizarTudo();
+    persistirAgora();
+    mostrarToast(`Planta importada: ${casa.rooms.length} cômodos.`);
+  } catch {
+    mostrarToast('JSON de planta inválido. Use um arquivo gerado/validado pelo app.');
+  }
+}
+
+async function carregarModeloDoProjeto() {
+  const nova = await lerCasaDoProjeto();
+  if (!nova) {
+    mostrarToast('app/data/casa.json não encontrado ou inválido.');
+    return;
+  }
+  if (!confirm('Carregar a planta de app/data/casa.json? As medições feitas aqui neste aparelho serão substituídas.')) return;
+  Object.assign(casa, nova);
+  estado.casa = casa;
+  if (!casa.rooms.some((r) => r.id === estado.comodoSelecionado)) estado.comodoSelecionado = casa.rooms[0].id;
+  mundo.definirCasa(casa);
+  sincronizarTudo();
+  persistirAgora();
+  mostrarToast('Planta do projeto carregada.');
+}
+
 async function importarJson(arquivo) {
   try {
     const cru = JSON.parse(await arquivo.text());
@@ -668,7 +746,7 @@ function resetar() {
   const padrao = estadoPadrao();
   for (const chave of Object.keys(estado)) delete estado[chave];
   Object.assign(estado, padrao, { casa });
-  Object.assign(casa, criarCasaPadrao());
+  Object.assign(casa, padrao.casa);
   mundo.definirCasa(casa);
   sincronizarTudo();
   persistirAgora();

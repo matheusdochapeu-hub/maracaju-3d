@@ -12,6 +12,31 @@ import { criarZip } from './zip.js';
 import { baixarArquivo, bytesLegivel, escaparHtml, vibrar } from './utils.js';
 import { initWallPlanner } from './wall-planner.js';
 
+/**
+ * Descobre a área pelo nome do arquivo (ex.: "IMG_1234_sala.jpg").
+ * É o que torna prático importar a pasta inteira da galeria do celular.
+ */
+export function detectarArea(nomeArquivo) {
+  const nome = String(nomeArquivo || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, ' ');
+  const testes = [
+    { area: 'quarto2', padrao: /\b(quarto ?2|q ?2|suite ?2)\b/ },
+    { area: 'quarto1', padrao: /\b(quarto ?1|q ?1|suite ?1|quarto)\b/ },
+    { area: 'banheiro', padrao: /\b(banheiro|banho|wc|lavabo)\b/ },
+    { area: 'cozinha', padrao: /\b(cozinha|copa)\b/ },
+    { area: 'corredor', padrao: /\b(corredor|hall|circulacao)\b/ },
+    { area: 'sala', padrao: /\b(sala|living)\b/ },
+    { area: 'muro', padrao: /\b(muro|muros)\b/ },
+    { area: 'fundos', padrao: /\b(fundos|quintal|obra|terreno|jardim)\b/ },
+    { area: 'frente', padrao: /\b(frente|fachada|rua|calcada|portao)\b/ },
+  ];
+  for (const teste of testes) if (teste.padrao.test(nome)) return teste.area;
+  return null;
+}
+
 const DB_NOME = 'maracaju3d_midias';
 const DB_VERSAO = 1;
 const STORE = 'midias';
@@ -704,7 +729,9 @@ export async function iniciarCaptura(ctx) {
   // ============================ IMPORTAÇÃO ============================
   async function importarImagens(arquivos, area) {
     let importadas = 0;
+    let detectadas = 0;
     for (const arquivo of arquivos) {
+      if (detectarArea(arquivo.name)) detectadas++;
       try {
         const preparada = await prepararImagem(arquivo);
         const exif = await exifDaFoto(arquivo);
@@ -712,7 +739,7 @@ export async function iniciarCaptura(ctx) {
         const item = {
           id: novoId(),
           tipo: 'foto',
-          area: area || els.camArea.value || 'sala',
+          area: detectarArea(arquivo.name) || area || els.camArea.value || 'sala',
           nota: arquivo.name,
           ts: Date.now(),
           bytes: preparada.bytes,
@@ -737,7 +764,10 @@ export async function iniciarCaptura(ctx) {
     renderGaleria();
     renderAreas();
     atualizarProgresso();
-    if (importadas) toast(`${importadas} foto${importadas === 1 ? '' : 's'} importada${importadas === 1 ? '' : 's'}.`);
+    if (importadas) {
+      const extra = detectadas ? ` (${detectadas} pela área do nome do arquivo)` : '';
+      toast(`${importadas} foto${importadas === 1 ? '' : 's'} importada${importadas === 1 ? '' : 's'}${extra}.`);
+    }
   }
 
   els.inputFotos.addEventListener('change', async (e) => {
@@ -747,25 +777,28 @@ export async function iniciarCaptura(ctx) {
   });
 
   els.inputVideo.addEventListener('change', async (e) => {
-    const arquivo = e.target.files?.[0];
-    if (!arquivo) return;
-    const ok = await salvarMidia({
-      id: novoId(),
-      tipo: 'video',
-      area: estado.areaCamera || 'sala',
-      nota: arquivo.name,
-      ts: Date.now(),
-      bytes: arquivo.size,
-      thumb: null,
-      blob: arquivo,
-      gps: gpsSessao,
-    });
+    const arquivos = [...(e.target.files || [])];
     e.target.value = '';
-    if (ok) {
+    let importados = 0;
+    for (const arquivo of arquivos) {
+      const ok = await salvarMidia({
+        id: novoId(),
+        tipo: 'video',
+        area: detectarArea(arquivo.name) || estado.areaCamera || 'sala',
+        nota: arquivo.name,
+        ts: Date.now(),
+        bytes: arquivo.size,
+        thumb: null,
+        blob: arquivo,
+        gps: gpsSessao,
+      });
+      if (ok) importados++;
+    }
+    if (importados) {
       renderGaleria();
       renderAreas();
       atualizarProgresso();
-      toast('Vídeo importado da galeria.');
+      toast(`${importados} vídeo${importados === 1 ? '' : 's'} importado${importados === 1 ? '' : 's'}.`);
     }
   });
 

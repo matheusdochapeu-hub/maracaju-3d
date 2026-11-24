@@ -198,6 +198,47 @@
             <label class="linha" style="gap:5px"><input type="checkbox" id="checkEtiquetas" /> Etiquetas</label>
           </div>
         </div>
+        <div class="card" id="cardPlantaFundo" hidden>
+          <h2>🖼️ Planta de fundo</h2>
+          <p class="ajuda">Coloque a imagem da planta real por baixo dos cômodos e desenhe por cima.</p>
+          <input type="file" id="inputPlantaFundo" accept="image/*" class="full" />
+          <p class="ajuda" id="fundoStatus">Nenhuma imagem carregada.</p>
+          <label class="campo">
+            <span>Opacidade <b id="lblFundoOpacidade">45%</b></span>
+            <input type="range" id="fundoOpacidade" min="10" max="80" step="5" value="45" />
+          </label>
+          <div class="grade2">
+            <label class="campo">
+              <span>Girar</span>
+              <select id="fundoRot">
+                <option value="0">0°</option>
+                <option value="90">90°</option>
+                <option value="180">180°</option>
+                <option value="270">270°</option>
+              </select>
+            </label>
+            <label class="campo">
+              <span>Largura <b id="lblFundoLargura">—</b></span>
+              <input type="range" id="fundoLargura" min="1" max="30" step="0.05" />
+            </label>
+          </div>
+          <div class="grade2">
+            <label class="campo">
+              <span>Deslocar X <b id="lblFundoX">0,0 m</b></span>
+              <input type="range" id="fundoX" min="-12" max="12" step="0.05" value="0" />
+            </label>
+            <label class="campo">
+              <span>Deslocar Z <b id="lblFundoZ">0,0 m</b></span>
+              <input type="range" id="fundoZ" min="-12" max="12" step="0.05" value="0" />
+            </label>
+          </div>
+          <button class="btn sm azul full" id="btnCalibrarFundo">📏 Calibrar com 2 pontos</button>
+          <button class="btn sm perigo full" id="btnRemoverFundo" style="margin-top:6px">🗑️ Remover planta</button>
+          <p class="ajuda">
+            Calibre com uma cota conhecida: clique nas duas pontas e digite a distância real.
+          </p>
+        </div>
+
         <div class="card">
           <h2>☀️ Sol no cômodo</h2>
           <label class="campo"><span>Data</span><input type="date" data-sol="data" /></label>
@@ -245,7 +286,7 @@
 
       <aside class="barra-lateral direita">
         <div class="card">
-          <h2>✏️ <span id="editorTitulo">Cômodo</span></h2>
+          <h2 class="h2-editor">✏️ <span id="editorTitulo">Cômodo</span></h2>
           <div id="editorComodo"></div>
         </div>
       </aside>
@@ -267,12 +308,15 @@
 
         <div class="card">
           <h2>Passo 1 · Escolha a área e fotografe</h2>
-          <p class="ajuda">A câmera abre dentro do app (precisa de HTTPS — o GitHub Pages já tem). Faça 8 fotos por cômodo, uma a cada passo, sem zoom.</p>
+          <p class="ajuda">
+            A câmera abre dentro do app (precisa de HTTPS — o GitHub Pages já tem). Faça 8 fotos por cômodo, uma a cada passo, sem zoom.
+            <b>Dica:</b> nomeie os arquivos com o cômodo (<code>sala</code>, <code>quarto1</code>, <code>banheiro</code>, <code>cozinha</code>, <code>muro</code>, <code>fundos</code>) para a importação distribuir sozinha.
+          </p>
           <div id="capturaAreas" class="grade-areas"></div>
           <div class="linha">
             <button class="btn" id="btnAbrirCamera">📸 Abrir câmera</button>
             <label class="btn" for="inputVideo">🎥 Enviar vídeo do celular</label>
-            <input type="file" id="inputVideo" accept="video/*" hidden />
+            <input type="file" id="inputVideo" accept="video/*" multiple hidden />
             <label class="btn" for="inputFotos">🖼️ Enviar fotos da galeria</label>
             <input type="file" id="inputFotos" accept="image/*" multiple hidden />
           </div>
@@ -350,6 +394,21 @@
             <button class="btn sm" id="btnAplicarEnvelope">Aplicar medidas</button>
             <p class="ajuda" id="avisoPlanta"></p>
           </div>
+        </div>
+
+        <div class="card">
+          <h2>Modelo da casa (planta real)</h2>
+          <p class="ajuda" id="modeloOrigem">—</p>
+          <div class="linha">
+            <button class="btn sm" id="btnBaixarModelo">⬇️ Baixar planta (JSON)</button>
+            <label class="btn sm" for="inputModeloJson">⬆️ Importar planta</label>
+            <input type="file" id="inputModeloJson" accept=".json,application/json" hidden />
+            <button class="btn sm azul" id="btnModeloProjeto">↺ Carregar do projeto</button>
+          </div>
+          <p class="ajuda">
+            Quando a planta real chegar: use a <b>imagem de fundo</b> na aba Interiores para desenhar por cima,
+            ou edite <code>app/data/casa.json</code> e clique em "Carregar do projeto".
+          </p>
         </div>
 
         <div class="card">

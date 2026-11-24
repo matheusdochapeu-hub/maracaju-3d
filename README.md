@@ -16,6 +16,16 @@
 | Como eu levanto a casa de verdade? | **Captura** → fotos e vídeos guiados por área, com pacote `.zip` pronto para virar 3D. |
 | O que ainda falta medir? | **Dados** → progresso, ficha da casa em Markdown e lista de pendências. |
 
+## Preparado para a planta real
+
+A planta que abre hoje é **estimada** (casa vagão de ~4,80 × 15,00 m), mas o modelo é um arquivo de dados: [`app/data/casa.json`](./app/data/casa.json). Quando a planta real chegar, você pode:
+
+1. **Desenhar por cima** — envie a planta como imagem de fundo na aba Interiores, calibre com uma cota conhecida e arraste os cômodos (recomendado).
+2. **Editar o arquivo** — troque cômodos/medidas em `app/data/casa.json` e clique em **Dados → Carregar do projeto**.
+3. **Pedir para um agente** — o schema e o passo a passo estão em [`PLANO_REAL_E_MIDIA.md`](./PLANO_REAL_E_MIDIA.md).
+
+As fotos e vídeos também já têm fluxo: importação em lote com **detecção da área pelo nome do arquivo**, gravação de vídeo pelo app e pacote `.zip` para Scaniverse/Colab. Veja o guia em [`PLANO_REAL_E_MIDIA.md`](./PLANO_REAL_E_MIDIA.md).
+
 ## As 4 abas
 
 1. **🏠 Casa 3D** — o lote inteiro: muros, casa, cobertura dos fundos, 11 módulos do ecossistema e o sol real de Ribeirão Preto. Clique num módulo para ver quantas horas de sol ele pega e mover no terreno.
@@ -90,7 +100,7 @@ Passo a passo detalhado de campo: [`GUIA_CAPTURA_E_RECONSTRUCAO_3D.md`](./GUIA_C
 ```powershell
 node --test --test-isolation=none test/*.test.mjs
 ```
-Cobrem o modelo da casa (paredes, vãos, completude, colisão), o gerador de ZIP e o leitor de EXIF/GPS. Não dependem de navegador.
+Cobrem o modelo da casa (paredes, vãos, completude, colisão), a escala da planta de fundo, a detecção de área pelo nome do arquivo, o gerador de ZIP e o leitor de EXIF/GPS. Não dependem de navegador.
 
 ## Arquivos
 
@@ -115,6 +125,7 @@ Cobrem o modelo da casa (paredes, vãos, completude, colisão), o gerador de ZIP
 
 ## Próximos passos em casa
 
+- [ ] Enviar a planta real como fundo na aba Interiores e calibrar a escala.
 - [ ] Medir largura, profundidade e pé-direito de cada cômodo e marcar como **medido**.
 - [ ] Conferir portas e janelas (largura, altura, peitoril) — hoje são estimativas.
 - [ ] Fotografar cada cômodo (8 fotos) e os fundos (12 fotos).

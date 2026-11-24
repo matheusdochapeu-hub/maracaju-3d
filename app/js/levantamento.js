@@ -106,6 +106,18 @@ export function iniciarLevantamento(ctx) {
     inputs.comprimento.value = (casa.envelope.z1 - casa.envelope.z0).toFixed(2);
     inputs.peDireito.value = casa.envelope.peDireito.toFixed(2);
     inputs.altura.value = casa.envelope.altura.toFixed(2);
+
+    const origem = {
+      estimado: 'estimada',
+      projeto: 'do projeto',
+      importado: 'importada',
+      medido: 'medida no local',
+      'sem-origem': 'sem origem declarada',
+    }[casa.origem] || casa.origem || 'estimada';
+    const fonte = casa.fonte ? ` · ${casa.fonte}` : '';
+    document.getElementById('modeloOrigem').textContent = `Planta ${origem}${fonte}${
+      casa.atualizadoEm ? ` · atualizada em ${dataHora(casa.atualizadoEm)}` : ''
+    }`;
   }
 
   elTabela.addEventListener('click', (e) => {
@@ -151,6 +163,14 @@ export function iniciarLevantamento(ctx) {
     const arquivo = e.target.files?.[0];
     e.target.value = '';
     if (arquivo) await ctx.importarJson(arquivo);
+  });
+
+  document.getElementById('btnBaixarModelo').addEventListener('click', () => ctx.exportarModelo());
+  document.getElementById('btnModeloProjeto').addEventListener('click', () => ctx.carregarModeloDoProjeto());
+  document.getElementById('inputModeloJson').addEventListener('change', async (e) => {
+    const arquivo = e.target.files?.[0];
+    e.target.value = '';
+    if (arquivo) await ctx.importarModelo(arquivo);
   });
 
   document.getElementById('btnExportarFicha').addEventListener('click', () => {
