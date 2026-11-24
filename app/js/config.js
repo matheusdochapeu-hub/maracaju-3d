@@ -53,7 +53,7 @@ export const MODULOS = {
     z: 1.0,
     rot: 0,
     desc: 'Floreiras e três setores de gotejamento ao longo do muro esquerdo, com sol da manhã entre 8 h e 12 h.',
-    dica: 'Setor A (frente/secO): alecrim e tomilho. Setor B (centro): manjericão e flores. Setor C (fundo/úmido): hortelã e melissa.',
+    dica: 'Setor A (frente/seco): alecrim e tomilho. Setor B (centro): manjericão e flores. Setor C (fundo/úmido): hortelã e melissa.',
     regra: null,
   },
   pergolado_frente: {
