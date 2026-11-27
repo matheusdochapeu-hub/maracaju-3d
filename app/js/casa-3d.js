@@ -266,8 +266,16 @@ function criarMovel3D(movel, room, matCfg = null, modoRealista = false) {
     visor.position.set(0, h * 0.48, d / 2 + 0.01);
     g.add(visor);
   } else if (forma === 'bancada') {
-    add(w, h - 0.06, d * 0.94, 0, (h - 0.06) / 2, 0, MAT.interna);
-    add(w, 0.06, d, 0, h - 0.03, 0);
+    const baseH = Math.max(0.1, h - 0.08);
+    // Base/alvenaria recuada com leve contraste + tampo espesso de mármore/pedra + rodopia encostada na parede
+    add(w * 0.9, baseH, d * 0.94, 0, baseH / 2, 0, MAT.estofado);
+    add(w, 0.08, d, 0, h - 0.04, 0);
+    // Frontão / rodopia traseira acompanhando o lado mais comprido da bancada
+    if (d >= w) {
+      add(0.03, 0.12, d, w / 2 - 0.015, h + 0.06, 0);
+    } else {
+      add(w, 0.12, 0.03, 0, h + 0.06, -d / 2 + 0.015);
+    }
   } else if (forma === 'box') {
     add(w, 0.07, d, 0, 0.035, 0, MAT.louca, false);
     add(0.04, h, d, w / 2 - 0.02, h / 2, 0, MAT.vidro, false);

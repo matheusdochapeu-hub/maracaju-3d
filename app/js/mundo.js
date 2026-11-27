@@ -281,19 +281,19 @@ export function criarMundo({ obterEstado, obterCasa, aoSelecionarModulo, aoSelec
   grupoTelhado.add(telhaAlpendre);
   telhadoOccluders.push(telhaAlpendre);
 
-  // 3) Continuação mais baixa do telhado principal sobre a Lavanderia (cobre da porta da cozinha até a janela da cozinha)
-  // Porta da cozinha: z = -2,20..-1,35 | Janela da cozinha: z = -3,90..-2,70 -> telhado cobre z = -4,15..-1,10 (3,05 m)
-  const telhaLavanderia = new THREE.Mesh(new THREE.BoxGeometry(1.85, 0.11, 3.15), materialTelha);
-  telhaLavanderia.position.set(-1.08, 2.66, -2.62);
-  telhaLavanderia.rotation.z = 0.16; // degrau abaixo do telhado principal, caimento da parede da cozinha p/ o muro esquerdo
+  // 3) Continuação mais baixa do telhado principal sobre a Lavanderia (parte de grupoTelhado: aparece e desaparece junto!)
+  // Cobre da porta da cozinha (z = -1,35..-2,20) até a janela da cozinha (z = -2,70..-3,90), encaixada sob o beiral principal
+  const telhaLavanderia = new THREE.Mesh(new THREE.BoxGeometry(1.92, 0.12, 3.25), materialTelha);
+  telhaLavanderia.position.set(-1.12, 2.82, -2.62);
+  telhaLavanderia.rotation.z = 0.2; // mesma direção de caimento do telhado principal, um degrau mais baixo
   telhaLavanderia.castShadow = true;
   telhaLavanderia.receiveShadow = true;
   telhaLavanderia.userData.sempreOccluder = true;
   grupoTelhado.add(telhaLavanderia);
   telhadoOccluders.push(telhaLavanderia);
 
-  // Calha/viga na borda esquerda da continuação do telhado da lavanderia
-  caixa(grupoTelhado, 0.1, 0.1, 3.15, -1.96, 2.48, -2.62, 0x64748b);
+  // Calha na borda esquerda da continuação do telhado da lavanderia (também em grupoTelhado)
+  caixa(grupoTelhado, 0.1, 0.1, 3.25, -2.02, 2.6, -2.62, 0x64748b);
 
   // ---------- Cobertura OPCIONAL dos fundos (DESLIGADA por padrão!) ----------
   // Apoiada no muro DIREITO (+X, divisa Machado de Assis), com QUEDA do telhado sentido ESQUERDO (-X, Visconde de Taunay)

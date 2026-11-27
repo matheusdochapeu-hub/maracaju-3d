@@ -153,30 +153,36 @@ function carregarEstado() {
     estado.comodoSelecionado = estado.casa.rooms[0]?.id || null;
   }
 
-  // Migração automática suave: adiciona a área editável da Lavanderia + bancada de mármore
+  // Migração automática suave: adiciona a área editável da Lavanderia + bancadas de mármore
   // sem perder móveis, texturas ou medidas que o usuário já editou no aparelho!
-  if (
-    estado.casa.origem === 'planta-real' &&
-    !estado.casa.rooms.some((r) => r.id === 'lavanderia') &&
-    casaDoProjeto?.rooms?.some((r) => r.id === 'lavanderia')
-  ) {
-    const idxCorr = estado.casa.rooms.findIndex((r) => r.id === 'corredor' && r.d >= 12);
-    if (idxCorr >= 0) {
-      const novosTrechos = casaDoProjeto.rooms
-        .filter((r) => ['corredor', 'lavanderia', 'corredor_fundos'].includes(r.id))
-        .map((r) => JSON.parse(JSON.stringify(r)));
-      estado.casa.rooms.splice(idxCorr, 1, ...novosTrechos);
-      const lav = estado.casa.rooms.find((r) => r.id === 'lavanderia');
-      if (lav && !estado.casa.moveis.some((m) => m.comodoId === 'lavanderia')) {
-        estado.casa.moveis.push(...gerarMoveisIniciaisDaCasa([lav]));
+  let migrouLavanderia = false;
+  if (casaDoProjeto?.rooms?.some((r) => r.id === 'lavanderia')) {
+    if (!estado.casa.rooms.some((r) => r.id === 'lavanderia')) {
+      const idxCorr = estado.casa.rooms.findIndex((r) => r.id === 'corredor' && r.d >= 8);
+      if (idxCorr >= 0) {
+        const novosTrechos = casaDoProjeto.rooms
+          .filter((r) => ['corredor', 'lavanderia', 'corredor_fundos'].includes(r.id))
+          .map((r) => JSON.parse(JSON.stringify(r)));
+        estado.casa.rooms.splice(idxCorr, 1, ...novosTrechos);
+        migrouLavanderia = true;
+      }
+    }
+    const lav = estado.casa.rooms.find((r) => r.id === 'lavanderia');
+    if (lav && !estado.casa.moveis.some((m) => m.comodoId === 'lavanderia' && m.catalogoId === 'bancada_marmore')) {
+      const novosMoveisLav = gerarMoveisIniciaisDaCasa([lav]).filter(
+        (novo) => !estado.casa.moveis.some((ex) => ex.comodoId === 'lavanderia' && ex.catalogoId === novo.catalogoId && ex.nome === novo.nome)
+      );
+      if (novosMoveisLav.length) {
+        estado.casa.moveis.push(...novosMoveisLav);
+        migrouLavanderia = true;
       }
     }
   }
 
-  return { estado, migradoDeV1 };
+  return { estado, migradoDeV1, migrouLavanderia };
 }
 
-const { estado, migradoDeV1 } = carregarEstado();
+const { estado, migradoDeV1, migrouLavanderia } = carregarEstado();
 const casa = estado.casa;
 let contagensFotos = {};
 
@@ -992,6 +998,9 @@ mundo.iniciarLoop((dt) => {
 
 if (migradoDeV1) {
   mostrarToast('Seu cenário anterior foi migrado. Confira as medidas na aba Interiores.');
+} else if (migrouLavanderia) {
+  persistirAgora();
+  mostrarToast('Lavanderia, telhado baixo e bancada de mármore atualizados na sua planta!');
 }
 setTimeout(() => {
   if (!localStorage.getItem(CHAVE_DICAS)) {
