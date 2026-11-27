@@ -180,6 +180,9 @@ function criarMovel3D(movel, room, matCfg = null, modoRealista = false) {
   const roughBase = forma === 'tv' || forma === 'geladeira' || forma === 'lavadora' || forma === 'fogao' ? 0.35 : 0.72;
   const metalBase = forma === 'tv' || forma === 'geladeira' || forma === 'fogao' ? 0.28 : 0.05;
   let cfgEfetivo = matCfg;
+  if (!cfgEfetivo && (movel.catalogoId === 'bancada_marmore' || /m[aá]rmore/i.test(movel.nome || ''))) {
+    cfgEfetivo = { texturaId: 'mov_marmore_bancada', rep: 2, acabamento: 'polido' };
+  }
   if (!cfgEfetivo && modoRealista) {
     if (forma === 'sofa' || forma === 'sofa_l' || forma === 'poltrona') cfgEfetivo = { texturaId: 'mov_linho_cinza' };
     else if (forma === 'mesa' || forma === 'rack' || forma === 'armario') cfgEfetivo = { texturaId: 'mov_freijo' };

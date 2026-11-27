@@ -25,12 +25,17 @@ import {
 const bruto = JSON.parse(fs.readFileSync(new URL('../app/data/casa.json', import.meta.url), 'utf8'));
 const casa = normalizarCasa(bruto);
 
-test('a planta real tem 10 cômodos, sala pentagonal (5 arestas) e 94,75 m² dentro do envelope', () => {
+test('a planta real tem 12 cômodos (incl. Lavanderia), sala pentagonal (5 arestas) e 94,75 m² dentro do envelope', () => {
   assert.equal(casa.origem, 'planta-real');
-  assert.equal(casa.rooms.length, 10);
+  assert.equal(casa.rooms.length, 12);
   const sala = casa.rooms.find((r) => r.id === 'sala');
   assert.equal(poligonoComodo(sala).length, 5);
   assert.equal(+areaComodo(sala).toFixed(2), 13.75);
+  const lav = casa.rooms.find((r) => r.id === 'lavanderia');
+  assert.ok(lav, 'deveria existir a área editável da Lavanderia');
+  assert.equal(+areaComodo(lav).toFixed(2), 6);
+  const bancadasLav = casa.moveis.filter((m) => m.comodoId === 'lavanderia' && m.catalogoId === 'bancada_marmore');
+  assert.ok(bancadasLav.length >= 2, 'lavanderia deveria incluir bancadas de mármore na parede externa da cozinha');
   const soma = casa.rooms.reduce((total, r) => total + areaComodo(r), 0);
   assert.equal(+soma.toFixed(2), 94.75);
   assert.equal(+((casa.envelope.x1 - casa.envelope.x0).toFixed(2)), 5.2);
@@ -72,12 +77,18 @@ test('as paredes externas fecham o envelope e deixam o alpendre totalmente abert
   assert.ok(frente.some((b) => Math.abs(b.fim - env.x1) < 0.01));
 });
 
-test('a passagem do corredor externo para o quintal é totalmente aberta (sem parede nem batente)', () => {
+test('a passagem do corredor externo e lavanderia até o quintal é totalmente aberta (sem parede atravessando)', () => {
   const blocos = redeDeParedes(casa);
   const env = casa.envelope;
   const fundos = blocos.filter((b) => b.eixo === 'h' && Math.abs(b.coord - env.z0) < 0.01);
   const bloqueioCorredor = fundos.find((b) => b.ini < -0.3 && b.fim > -1.7);
   assert.equal(bloqueioCorredor, undefined);
+
+  // Nenhuma parede horizontal atravessando as divisas da Lavanderia (z = -0.65 e z = -4.65) dentro do corredor (-1.75..-0.25)
+  const bloqueioLavFrente = blocos.find((b) => b.eixo === 'h' && Math.abs(b.coord - -0.65) < 0.05 && b.ini < -0.3 && b.fim > -1.7);
+  const bloqueioLavFundo = blocos.find((b) => b.eixo === 'h' && Math.abs(b.coord - -4.65) < 0.05 && b.ini < -0.3 && b.fim > -1.7);
+  assert.equal(bloqueioLavFrente, undefined);
+  assert.equal(bloqueioLavFundo, undefined);
 });
 
 test('muro esquerdo é divisa fechada (sem janelas para rua lateral) e janelas internas abrem para o corredor externo', () => {
@@ -142,9 +153,11 @@ test('pendências apontam o que fazer e para qual cômodo', () => {
   assert.ok(lista.some((p) => p.acao === 'captura'));
 });
 
-test('comodoNoPonto acha sala, corredor, quarto e o vazio', () => {
+test('comodoNoPonto acha sala, lavanderia, corredor, quarto e o vazio', () => {
   assert.equal(comodoNoPonto(casa, 1.0, 1.3)?.id, 'sala');
-  assert.equal(comodoNoPonto(casa, -1.0, -1.7)?.id, 'corredor');
+  assert.equal(comodoNoPonto(casa, -1.0, 0.5)?.id, 'corredor');
+  assert.equal(comodoNoPonto(casa, -1.0, -2.5)?.id, 'lavanderia');
+  assert.equal(comodoNoPonto(casa, -1.0, -7.0)?.id, 'corredor_fundos');
   assert.equal(comodoNoPonto(casa, 1.5, 5.8)?.id, 'quarto1');
   assert.equal(comodoNoPonto(casa, -3.0, -1.7), null);
 });

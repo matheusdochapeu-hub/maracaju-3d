@@ -7,6 +7,7 @@
 
 import { MODULOS, GRUPOS_MODULOS, SITE, CHAVE_ESTADO, CHAVE_ESTADO_ANTIGO, CHAVE_DICAS, VERSAO, ROTEIRO_CAPTURA } from './config.js';
 import { criarCasaPadrao, normalizarCasa, completudeCasa } from './casa-modelo.js';
+import { gerarMoveisIniciaisDaCasa } from './moveis-catalogo.js';
 import { normalizarFundo } from './planta.js';
 import { criarMundo } from './mundo.js';
 import { iniciarInteriores } from './interiores.js';
@@ -151,6 +152,27 @@ function carregarEstado() {
   if (!estado.casa.rooms.some((r) => r.id === estado.comodoSelecionado)) {
     estado.comodoSelecionado = estado.casa.rooms[0]?.id || null;
   }
+
+  // Migração automática suave: adiciona a área editável da Lavanderia + bancada de mármore
+  // sem perder móveis, texturas ou medidas que o usuário já editou no aparelho!
+  if (
+    estado.casa.origem === 'planta-real' &&
+    !estado.casa.rooms.some((r) => r.id === 'lavanderia') &&
+    casaDoProjeto?.rooms?.some((r) => r.id === 'lavanderia')
+  ) {
+    const idxCorr = estado.casa.rooms.findIndex((r) => r.id === 'corredor' && r.d >= 12);
+    if (idxCorr >= 0) {
+      const novosTrechos = casaDoProjeto.rooms
+        .filter((r) => ['corredor', 'lavanderia', 'corredor_fundos'].includes(r.id))
+        .map((r) => JSON.parse(JSON.stringify(r)));
+      estado.casa.rooms.splice(idxCorr, 1, ...novosTrechos);
+      const lav = estado.casa.rooms.find((r) => r.id === 'lavanderia');
+      if (lav && !estado.casa.moveis.some((m) => m.comodoId === 'lavanderia')) {
+        estado.casa.moveis.push(...gerarMoveisIniciaisDaCasa([lav]));
+      }
+    }
+  }
+
   return { estado, migradoDeV1 };
 }
 

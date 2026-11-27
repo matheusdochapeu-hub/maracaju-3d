@@ -68,6 +68,7 @@ export const CATALOGO_MOVEIS = [
 
   // ---- COZINHA ----
   { id: 'bancada_pia', nome: 'Bancada / Pia cozinha', categoria: 'cozinha', forma: 'bancada', w: 2.2, d: 0.6, h: 0.9, y: 0, cor: '#c9cdd2' },
+  { id: 'bancada_marmore', nome: 'Bancada de mármore', categoria: 'cozinha', forma: 'bancada', w: 0.55, d: 2.2, h: 0.88, y: 0, cor: '#eceae4' },
   { id: 'balcao_ilha', nome: 'Balcão / Ilha', categoria: 'cozinha', forma: 'bancada', w: 1.4, d: 0.6, h: 0.95, y: 0, cor: '#94a3b8' },
   { id: 'armario_aereo', nome: 'Armário aéreo cozinha', categoria: 'cozinha', forma: 'armario', w: 1.4, d: 0.35, h: 0.7, y: 1.55, cor: '#e2e8f0' },
   { id: 'mesa_cozinha', nome: 'Mesa cozinha 4 lugares', categoria: 'cozinha', forma: 'mesa', w: 1.1, d: 0.75, h: 0.76, y: 0, cor: '#cbd5e1' },
@@ -257,6 +258,13 @@ export function gerarMoveisIniciaisDaCasa(rooms = []) {
       push(r, { catalogoId: 'box_vidro', nome: 'Box de vidro', categoria: 'banheiro', forma: 'box', w: 0.9, d: 0.9, h: 1.95, y: 0, x: 0.5, z: 0.5, rot: 0, cor: '#9fd8f2' });
       push(r, { catalogoId: 'vaso_sanitario', nome: 'Vaso sanitário', categoria: 'banheiro', forma: 'vaso', w: 0.4, d: 0.6, h: 0.75, y: 0, x: 0.4, z: r.d - 0.42, rot: 0, cor: '#f2f5f8' });
       push(r, { catalogoId: 'gabinete_pia', nome: 'Gabinete + Pia', categoria: 'banheiro', forma: 'pia', w: 0.68, d: 0.44, h: 0.82, y: 0, x: r.w - 0.45, z: 0.32, rot: 0, cor: '#c9cdd2' });
+    } else if (r.tipo === 'servico' || r.id === 'lavanderia') {
+      // Bancada de mármore ao longo de todo o perímetro da parede externa da cozinha (trecho sob a janela até a porta + trecho após a porta)
+      push(r, { catalogoId: 'bancada_marmore', nome: 'Bancada de mármore (parede cozinha)', categoria: 'cozinha', forma: 'bancada', w: 0.52, d: Math.min(2.38, r.d * 0.6), h: 0.88, y: 0, x: r.w - 0.27, z: Math.min(2.38, r.d * 0.6) / 2 + 0.02, rot: 0, cor: '#eceae4' });
+      if (r.d >= 3.5) {
+        push(r, { catalogoId: 'bancada_marmore', nome: 'Bancada de mármore (lateral porta)', categoria: 'cozinha', forma: 'bancada', w: 0.52, d: 0.66, h: 0.88, y: 0, x: r.w - 0.27, z: r.d - 0.34, rot: 0, cor: '#eceae4' });
+      }
+      push(r, { catalogoId: 'maquina_lavar', nome: 'Máquina de lavar roupas', categoria: 'eletro', forma: 'lavadora', w: 0.62, d: 0.64, h: 0.92, y: 0, x: 0.34, z: 0.95, rot: 90, cor: '#f1f5f9' });
     }
   }
   return lista;
