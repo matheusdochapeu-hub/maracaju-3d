@@ -259,11 +259,8 @@ export function gerarMoveisIniciaisDaCasa(rooms = []) {
       push(r, { catalogoId: 'vaso_sanitario', nome: 'Vaso sanitário', categoria: 'banheiro', forma: 'vaso', w: 0.4, d: 0.6, h: 0.75, y: 0, x: 0.4, z: r.d - 0.42, rot: 0, cor: '#f2f5f8' });
       push(r, { catalogoId: 'gabinete_pia', nome: 'Gabinete + Pia', categoria: 'banheiro', forma: 'pia', w: 0.68, d: 0.44, h: 0.82, y: 0, x: r.w - 0.45, z: 0.32, rot: 0, cor: '#c9cdd2' });
     } else if (r.tipo === 'servico' || r.id === 'lavanderia') {
-      // Bancada de mármore ao longo de todo o perímetro da parede externa da cozinha (trecho sob a janela até a porta + trecho após a porta)
+      // Bancada de mármore encostada na parede externa da cozinha (da divisa fundo sob a janela até a porta da cozinha)
       push(r, { catalogoId: 'bancada_marmore', nome: 'Bancada de mármore (parede cozinha)', categoria: 'cozinha', forma: 'bancada', w: 0.52, d: Math.min(2.38, r.d * 0.6), h: 0.88, y: 0, x: r.w - 0.27, z: Math.min(2.38, r.d * 0.6) / 2 + 0.02, rot: 0, cor: '#eceae4' });
-      if (r.d >= 3.5) {
-        push(r, { catalogoId: 'bancada_marmore', nome: 'Bancada de mármore (lateral porta)', categoria: 'cozinha', forma: 'bancada', w: 0.52, d: 0.66, h: 0.88, y: 0, x: r.w - 0.27, z: r.d - 0.34, rot: 0, cor: '#eceae4' });
-      }
       push(r, { catalogoId: 'maquina_lavar', nome: 'Máquina de lavar roupas', categoria: 'eletro', forma: 'lavadora', w: 0.62, d: 0.64, h: 0.92, y: 0, x: 0.34, z: 0.95, rot: 90, cor: '#f1f5f9' });
     }
   }

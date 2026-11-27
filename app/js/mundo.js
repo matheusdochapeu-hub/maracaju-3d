@@ -359,15 +359,10 @@ export function criarMundo({ obterEstado, obterCasa, aoSelecionarModulo, aoSelec
       add(0.04, 0.65, 0.04, 0, 2.35, 0, corSolida(0x38bdf8));
       add(0.5, 0.05, 0.05, 0, 1.85, 0, corSolida(0xf8fafc));
     } else if (id === 'horta_15m') {
-      add(0.45, 0.45, 4.4, 0, 0.65, 4.8, corSolida(0x92400e));
-      add(0.4, 0.28, 4.2, 0, 1.0, 4.8, corSolida(0xa3e635));
-      add(0.45, 0.45, 5.2, 0, 0.65, 0, corSolida(0x78350f));
-      add(0.4, 0.34, 5.0, 0, 1.02, 0, corSolida(0x22c55e));
-      [-3.4, -4.4, -5.4, -6.4].forEach((zv) => {
-        add(0.45, 0.42, 0.65, 0, 0.24, zv, corSolida(0x0369a1));
-        add(0.38, 0.35, 0.58, 0, 0.6, zv, corSolida(0x10b981));
-      });
-      add(0.05, 0.05, 14.4, 0.22, 0.9, 0.2, corSolida(0x38bdf8));
+      // Floreiras no muro esquerdo do corredor externo: da porta do alpendre (+2,20) até o início da linha da cozinha (-0,60)
+      add(0.42, 0.45, 2.8, 0, 0.65, 0, corSolida(0x92400e));
+      add(0.36, 0.32, 2.68, 0, 1.0, 0, corSolida(0x22c55e));
+      add(0.05, 0.05, 2.8, 0.2, 0.9, 0, corSolida(0x38bdf8));
     } else if (id === 'pergolado_frente') {
       [
         [-1.1, -0.75],

@@ -35,7 +35,7 @@ test('a planta real tem 12 cômodos (incl. Lavanderia), sala pentagonal (5 arest
   assert.ok(lav, 'deveria existir a área editável da Lavanderia');
   assert.equal(+areaComodo(lav).toFixed(2), 6);
   const bancadasLav = casa.moveis.filter((m) => m.comodoId === 'lavanderia' && m.catalogoId === 'bancada_marmore');
-  assert.ok(bancadasLav.length >= 2, 'lavanderia deveria incluir bancadas de mármore na parede externa da cozinha');
+  assert.equal(bancadasLav.length, 1, 'lavanderia deveria ter a bancada de mármore apenas sob a janela (sem lateral direita da porta)');
   const soma = casa.rooms.reduce((total, r) => total + areaComodo(r), 0);
   assert.equal(+soma.toFixed(2), 94.75);
   assert.equal(+((casa.envelope.x1 - casa.envelope.x0).toFixed(2)), 5.2);

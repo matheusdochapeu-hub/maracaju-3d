@@ -168,15 +168,31 @@ function carregarEstado() {
       }
     }
     const lav = estado.casa.rooms.find((r) => r.id === 'lavanderia');
-    if (lav && !estado.casa.moveis.some((m) => m.comodoId === 'lavanderia' && m.catalogoId === 'bancada_marmore')) {
-      const novosMoveisLav = gerarMoveisIniciaisDaCasa([lav]).filter(
-        (novo) => !estado.casa.moveis.some((ex) => ex.comodoId === 'lavanderia' && ex.catalogoId === novo.catalogoId && ex.nome === novo.nome)
+    if (lav) {
+      // Remove a bancada pequena do lado direito da porta, caso exista de versão anterior
+      const antesLen = estado.casa.moveis.length;
+      estado.casa.moveis = estado.casa.moveis.filter(
+        (m) => !(m.comodoId === 'lavanderia' && m.nome === 'Bancada de mármore (lateral porta)')
       );
-      if (novosMoveisLav.length) {
-        estado.casa.moveis.push(...novosMoveisLav);
-        migrouLavanderia = true;
+      if (estado.casa.moveis.length !== antesLen) migrouLavanderia = true;
+
+      if (!estado.casa.moveis.some((m) => m.comodoId === 'lavanderia' && m.catalogoId === 'bancada_marmore')) {
+        const novosMoveisLav = gerarMoveisIniciaisDaCasa([lav]).filter(
+          (novo) => !estado.casa.moveis.some((ex) => ex.comodoId === 'lavanderia' && ex.catalogoId === novo.catalogoId && ex.nome === novo.nome)
+        );
+        if (novosMoveisLav.length) {
+          estado.casa.moveis.push(...novosMoveisLav);
+          migrouLavanderia = true;
+        }
       }
     }
+  }
+
+  // Ajusta automaticamente a posição antiga das plantas do muro esquerdo para parar na linha da cozinha
+  if (estado.modulos?.horta_15m && Number(estado.modulos.horta_15m.z) <= -4.0) {
+    estado.modulos.horta_15m.x = MODULOS.horta_15m.x;
+    estado.modulos.horta_15m.z = MODULOS.horta_15m.z;
+    migrouLavanderia = true;
   }
 
   return { estado, migradoDeV1, migrouLavanderia };
