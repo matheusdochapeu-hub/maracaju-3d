@@ -7,7 +7,7 @@
  */
 
 import * as THREE from 'three';
-import { aberturasVisiveis, areaComodo, PISOS, redeDeParedes } from './casa-modelo.js';
+import { aberturasVisiveis, areaComodo, PISOS, poligonoComodo, redeDeParedes } from './casa-modelo.js';
 
 const MAT = {
   externa: new THREE.MeshStandardMaterial({ color: 0xe2ddd5, roughness: 0.86, metalness: 0.02 }),
@@ -170,29 +170,64 @@ export function construirCasa(casa) {
         metalness: 0.02,
       });
       materialPiso.userData.proprio = true;
-      const malha = caixa(grupoInterior, room.w, 0.04, room.d, room.x + room.w / 2, 0.02, room.z + room.d / 2, materialPiso, false);
-      malha.receiveShadow = true;
+      const poly = poligonoComodo(room);
+      let malha;
+      if (poly.length > 4) {
+        const shape = new THREE.Shape();
+        poly.forEach(([px, pz], idx) => {
+          if (idx === 0) shape.moveTo(px, -pz);
+          else shape.lineTo(px, -pz);
+        });
+        shape.closePath();
+        const geo = new THREE.ExtrudeGeometry(shape, { depth: 0.04, bevelEnabled: false });
+        malha = new THREE.Mesh(geo, materialPiso);
+        malha.rotation.x = -Math.PI / 2;
+        malha.position.y = 0.0;
+        malha.castShadow = false;
+        malha.receiveShadow = true;
+        grupoInterior.add(malha);
+      } else {
+        malha = caixa(grupoInterior, room.w, 0.04, room.d, room.x + room.w / 2, 0.02, room.z + room.d / 2, materialPiso, false);
+        malha.receiveShadow = true;
+      }
       centroDosComodos[room.id] = { x: room.x + room.w / 2, z: room.z + room.d / 2 };
     }
 
     // ---- Paredes, portas e janelas ----
     const blocos = redeDeParedes(modelo);
     for (const b of blocos) {
-      const comprimento = b.fim - b.ini;
       const altura = b.yTopo - b.yBase;
-      if (comprimento <= 0.02 || altura <= 0.02) continue;
+      if (altura <= 0.02) continue;
       const material = b.externa ? MAT.externa : b.tipo === 'parede' ? MAT.interna : MAT.verga;
       const destino = b.externa ? grupoExterior : grupoInterior;
       let malha;
-      if (b.eixo === 'h') {
-        malha = caixa(destino, comprimento, altura, b.espessura, (b.ini + b.fim) / 2, (b.yBase + b.yTopo) / 2, b.coord, material);
+      if (b.eixo === 'd') {
+        const comprimento = Math.hypot(b.x2 - b.x1, b.z2 - b.z1);
+        if (comprimento <= 0.02) continue;
+        const rotY = -Math.atan2(b.z2 - b.z1, b.x2 - b.x1);
+        malha = caixa(destino, comprimento, altura, b.espessura, (b.x1 + b.x2) / 2, (b.yBase + b.yTopo) / 2, (b.z1 + b.z2) / 2, material);
+        malha.rotation.y = rotY;
         if (b.yBase < 1.6 && b.yTopo > 0.25) {
-          colisores.push({ x0: b.ini, x1: b.fim, z0: b.coord - b.espessura / 2, z1: b.coord + b.espessura / 2 });
+          colisores.push({
+            x0: Math.min(b.x1, b.x2) - b.espessura / 2,
+            x1: Math.max(b.x1, b.x2) + b.espessura / 2,
+            z0: Math.min(b.z1, b.z2) - b.espessura / 2,
+            z1: Math.max(b.z1, b.z2) + b.espessura / 2,
+          });
         }
       } else {
-        malha = caixa(destino, b.espessura, altura, comprimento, b.coord, (b.yBase + b.yTopo) / 2, (b.ini + b.fim) / 2, material);
-        if (b.yBase < 1.6 && b.yTopo > 0.25) {
-          colisores.push({ x0: b.coord - b.espessura / 2, x1: b.coord + b.espessura / 2, z0: b.ini, z1: b.fim });
+        const comprimento = b.fim - b.ini;
+        if (comprimento <= 0.02) continue;
+        if (b.eixo === 'h') {
+          malha = caixa(destino, comprimento, altura, b.espessura, (b.ini + b.fim) / 2, (b.yBase + b.yTopo) / 2, b.coord, material);
+          if (b.yBase < 1.6 && b.yTopo > 0.25) {
+            colisores.push({ x0: b.ini, x1: b.fim, z0: b.coord - b.espessura / 2, z1: b.coord + b.espessura / 2 });
+          }
+        } else {
+          malha = caixa(destino, b.espessura, altura, comprimento, b.coord, (b.yBase + b.yTopo) / 2, (b.ini + b.fim) / 2, material);
+          if (b.yBase < 1.6 && b.yTopo > 0.25) {
+            colisores.push({ x0: b.coord - b.espessura / 2, x1: b.coord + b.espessura / 2, z0: b.ini, z1: b.fim });
+          }
         }
       }
       occluders.push(malha);
@@ -201,13 +236,26 @@ export function construirCasa(casa) {
     // ---- Batentes, esquadrias e vidros ----
     for (const a of aberturasVisiveis(modelo)) {
       if (a.vao) continue; // vão livre sem batente de porta
-      const hHorizontal = a.eixo === 'h';
       const esp = env.espExterna;
       const barra = a.tipo === 'porta' ? MAT.batente : MAT.esquadria;
       const larg = a.largura;
       const alt = a.altura;
       const peitoril = a.peitoril;
       const yCentro = peitoril + alt / 2;
+
+      if (a.eixo === 'd') {
+        const rotY = -Math.atan2(a.z2 - a.z1, a.x2 - a.x1);
+        const grupoDiag = new THREE.Group();
+        grupoDiag.position.set((a.x1 + a.x2) / 2, 0, (a.z1 + a.z2) / 2);
+        grupoDiag.rotation.y = rotY;
+        caixa(grupoDiag, 0.05, alt, esp + 0.04, -larg / 2 + 0.025, yCentro, 0, barra);
+        caixa(grupoDiag, 0.05, alt, esp + 0.04, larg / 2 - 0.025, yCentro, 0, barra);
+        caixa(grupoDiag, larg, 0.05, esp + 0.04, 0, peitoril + alt - 0.025, 0, barra);
+        grupoExterior.add(grupoDiag);
+        continue;
+      }
+
+      const hHorizontal = a.eixo === 'h';
       const criarBarra = (bw, bh, bd, dx, dy, dz) => {
         if (hHorizontal) caixa(grupoExterior, bw, bh, bd, a.ini + larg / 2 + dx, dy, a.coord + dz, barra);
         else caixa(grupoExterior, bd, bh, bw, a.coord + dz, dy, a.ini + larg / 2 + dx, barra);
@@ -252,18 +300,26 @@ export function construirCasa(casa) {
       depthWrite: false,
     });
     material.userData.proprio = true;
-    const piso = new THREE.Mesh(new THREE.PlaneGeometry(room.w, room.d), material);
-    piso.rotation.x = -Math.PI / 2;
-    piso.position.set(room.x + room.w / 2, 0.075, room.z + room.d / 2);
-    grupoDestaque.add(piso);
+    const poly = poligonoComodo(room);
+    if (poly.length > 4) {
+      const shape = new THREE.Shape();
+      poly.forEach(([px, pz], idx) => {
+        if (idx === 0) shape.moveTo(px, -pz);
+        else shape.lineTo(px, -pz);
+      });
+      shape.closePath();
+      const piso = new THREE.Mesh(new THREE.ShapeGeometry(shape), material);
+      piso.rotation.x = -Math.PI / 2;
+      piso.position.y = 0.075;
+      grupoDestaque.add(piso);
+    } else {
+      const piso = new THREE.Mesh(new THREE.PlaneGeometry(room.w, room.d), material);
+      piso.rotation.x = -Math.PI / 2;
+      piso.position.set(room.x + room.w / 2, 0.075, room.z + room.d / 2);
+      grupoDestaque.add(piso);
+    }
 
-    const pontos = [
-      new THREE.Vector3(room.x, 0.085, room.z),
-      new THREE.Vector3(room.x + room.w, 0.085, room.z),
-      new THREE.Vector3(room.x + room.w, 0.085, room.z + room.d),
-      new THREE.Vector3(room.x, 0.085, room.z + room.d),
-      new THREE.Vector3(room.x, 0.085, room.z),
-    ];
+    const pontos = [...poly.map(([px, pz]) => new THREE.Vector3(px, 0.085, pz)), new THREE.Vector3(poly[0][0], 0.085, poly[0][1])];
     const linha = new THREE.Line(
       new THREE.BufferGeometry().setFromPoints(pontos),
       new THREE.LineBasicMaterial({ color: room.cor })

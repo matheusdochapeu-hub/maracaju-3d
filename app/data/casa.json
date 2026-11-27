@@ -72,14 +72,14 @@
       "cor": "#a3e635",
       "piso": "cimento",
       "status": "medido",
-      "notas": "Final do alpendre sentido fundos: duas portas lado a lado — porta da esquerda abre para o corredor externo (muro das plantas) e porta da direita abre para a sala.",
+      "notas": "Final do alpendre sentido fundos: exatamente duas portas lado a lado — porta da esquerda (perpendicular ao muro) abre para o corredor externo e porta da direita (na diagonal da sala) entra na sala.",
       "mobilia": false,
-      "paredesAbertas": ["frente"],
+      "paredesAbertas": ["frente", "direita"],
       "portas": [
         {
           "parede": "fundo",
-          "inicio": 0.2,
-          "largura": 0.9,
+          "inicio": 0.55,
+          "largura": 0.85,
           "altura": 2.1
         }
       ],
@@ -96,14 +96,17 @@
       "cor": "#38bdf8",
       "piso": "porcelanato",
       "status": "medido",
-      "notas": "Sala (3,50 × 4,00 m). Porta da direita no final do alpendre entra aqui; tem ainda porta para o quarto da frente (escritório) e porta para a cozinha.",
-      "portas": [
-        {
-          "parede": "esquerda",
-          "inicio": 3.05,
+      "notas": "Sala pentagonal (5 arestas): a menor aresta é a parede chanfrada na diagonal com a porta de entrada ao lado da porta do corredor externo. Tem ainda porta para o escritório e porta para a cozinha.",
+      "chanfro": {
+        "canto": "frente-esquerda",
+        "dx": 0.5,
+        "dz": 1.0,
+        "porta": {
           "largura": 0.85,
           "altura": 2.1
-        },
+        }
+      },
+      "portas": [
         {
           "parede": "fundo",
           "inicio": 2.35,

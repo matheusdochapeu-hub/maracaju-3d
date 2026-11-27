@@ -5,7 +5,7 @@
  * (arrastar na planta, editar medidas, portas e janelas) e o modo passeio.
  */
 
-import { aberturasVisiveis, areaComodo, completudeComodo, limitarAoEnvelope, moverComColisao, PISOS, redeDeParedes, TIPOS_COMODO, diagnosticarPlanta } from './casa-modelo.js';
+import { aberturasVisiveis, areaComodo, completudeComodo, limitarAoEnvelope, moverComColisao, PISOS, poligonoComodo, redeDeParedes, TIPOS_COMODO, diagnosticarPlanta } from './casa-modelo.js';
 import { escaparHtml, metros } from './utils.js';
 import { ROTEIRO_CAPTURA } from './config.js';
 import { escalaCalibrada, escalaInicial, normalizarFundo } from './planta.js';
@@ -686,14 +686,21 @@ export function iniciarInteriores(ctx) {
     g.lineWidth = 1;
     g.strokeRect(paraTelaX(env.x0), paraTelaY(env.z0), largura * esc, profundidade * esc);
 
-    // Pisos
+    // Pisos (suporta cômodos retangulares e pentagonais com chanfro)
     for (const r of casa.rooms) {
       const sel = r.id === estado.comodoSelecionado;
+      const poly = poligonoComodo(r);
       g.fillStyle = hexComAlfa(r.cor, sel ? 0.34 : 0.15);
-      g.fillRect(paraTelaX(r.x), paraTelaY(r.z), r.w * esc, r.d * esc);
       g.strokeStyle = sel ? '#ffffff' : hexComAlfa(r.cor, 0.55);
       g.lineWidth = sel ? 2.4 : 1.2;
-      g.strokeRect(paraTelaX(r.x), paraTelaY(r.z), r.w * esc, r.d * esc);
+      g.beginPath();
+      poly.forEach(([px, pz], idx) => {
+        if (idx === 0) g.moveTo(paraTelaX(px), paraTelaY(pz));
+        else g.lineTo(paraTelaX(px), paraTelaY(pz));
+      });
+      g.closePath();
+      g.fill();
+      g.stroke();
     }
 
     // Imagem da planta real: por cima do piso, por baixo das paredes,
@@ -704,7 +711,14 @@ export function iniciarInteriores(ctx) {
     for (const b of redeDeParedes(casa)) {
       if (b.tipo !== 'parede') continue;
       g.fillStyle = b.externa ? 'rgba(226,221,213,0.92)' : 'rgba(243,240,234,0.8)';
-      if (b.eixo === 'h') {
+      if (b.eixo === 'd') {
+        g.strokeStyle = g.fillStyle;
+        g.lineWidth = Math.max(2, b.espessura * esc);
+        g.beginPath();
+        g.moveTo(paraTelaX(b.x1), paraTelaY(b.z1));
+        g.lineTo(paraTelaX(b.x2), paraTelaY(b.z2));
+        g.stroke();
+      } else if (b.eixo === 'h') {
         g.fillRect(paraTelaX(b.ini), paraTelaY(b.coord) - (b.espessura * esc) / 2, (b.fim - b.ini) * esc, Math.max(2, b.espessura * esc));
       } else {
         g.fillRect(paraTelaX(b.coord) - (b.espessura * esc) / 2, paraTelaY(b.ini), Math.max(2, b.espessura * esc), (b.fim - b.ini) * esc);
@@ -713,6 +727,19 @@ export function iniciarInteriores(ctx) {
 
     // Portas e janelas
     for (const a of aberturasVisiveis(casa)) {
+      if (a.eixo === 'd') {
+        const x1 = paraTelaX(a.x1);
+        const y1 = paraTelaY(a.z1);
+        const x2 = paraTelaX(a.x2);
+        const y2 = paraTelaY(a.z2);
+        g.strokeStyle = '#fbbf24';
+        g.lineWidth = 2.5;
+        g.beginPath();
+        g.moveTo(x1, y1);
+        g.lineTo(x2, y2);
+        g.stroke();
+        continue;
+      }
       if (a.eixo === 'h') {
         const x1 = paraTelaX(a.ini);
         const x2 = paraTelaX(a.fim);

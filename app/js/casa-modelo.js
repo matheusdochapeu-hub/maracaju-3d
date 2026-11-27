@@ -101,8 +101,41 @@ export function clonar(obj) {
   return JSON.parse(JSON.stringify(obj));
 }
 
+/**
+ * Devolve os vértices [x, z] do polígono do cômodo (4 vértices ou 5 quando há chanfro).
+ */
+export function poligonoComodo(r) {
+  const x0 = r.x;
+  const x1 = r.x + r.w;
+  const z0 = r.z;
+  const z1 = r.z + r.d;
+  const ch = r.chanfro;
+  if (ch && ch.canto === 'frente-esquerda' && ch.dx > 0.05 && ch.dz > 0.05) {
+    const dx = Math.min(ch.dx, r.w - 0.2);
+    const dz = Math.min(ch.dz, r.d - 0.2);
+    return [
+      [x0, z0],
+      [x1, z0],
+      [x1, z1],
+      [x0 + dx, z1],
+      [x0, z1 - dz],
+    ];
+  }
+  return [
+    [x0, z0],
+    [x1, z0],
+    [x1, z1],
+    [x0, z1],
+  ];
+}
+
 export function areaComodo(r) {
-  return Math.max(0, r.w) * Math.max(0, r.d);
+  const base = Math.max(0, r.w) * Math.max(0, r.d);
+  const ch = r.chanfro;
+  if (ch && ch.dx > 0.05 && ch.dz > 0.05) {
+    return Math.max(0, base - (ch.dx * ch.dz) / 2);
+  }
+  return base;
 }
 
 export function areaEnvelope(env) {
@@ -163,6 +196,23 @@ export function normalizarCasa(bruta) {
         paredesAbertas: Array.isArray(r.paredesAbertas)
           ? [...new Set(r.paredesAbertas.filter((p) => ['frente', 'fundo', 'esquerda', 'direita'].includes(p)))]
           : [],
+        ...(r.chanfro && typeof r.chanfro === 'object' && r.chanfro.canto === 'frente-esquerda'
+          ? {
+              chanfro: {
+                canto: 'frente-esquerda',
+                dx: numeroValido(r.chanfro.dx ?? 0.5, 0.1, 4),
+                dz: numeroValido(r.chanfro.dz ?? 1.0, 0.1, 4),
+                ...(r.chanfro.porta
+                  ? {
+                      porta: {
+                        largura: numeroValido(r.chanfro.porta.largura ?? 0.85, 0.4, 3),
+                        altura: numeroValido(r.chanfro.porta.altura ?? 2.1, 0.5, 2.8),
+                      },
+                    }
+                  : {}),
+              },
+            }
+          : {}),
         mobilia: typeof r.mobilia === 'boolean' ? r.mobilia : true,
       };
     });
@@ -264,15 +314,24 @@ export function redeDeParedes(casa, opcoes = {}) {
     g.arestas.push({ ...aresta, coord, externa });
   };
 
+  const blocosDiagonais = [];
+
   for (const room of casa.rooms) {
     const abertas = new Set(room.paredesAbertas || []);
+    const ch = room.chanfro;
     for (const parede of ['frente', 'fundo', 'esquerda', 'direita']) {
       const p = paredeDoComodo(room, parede);
       if (!p) continue;
+      let ini = p.ini;
+      let fim = p.fim;
+      if (ch && ch.canto === 'frente-esquerda') {
+        if (parede === 'esquerda') fim = Math.max(ini, fim - ch.dz);
+        if (parede === 'frente') ini = Math.min(fim, ini + ch.dx);
+      }
       const aberturas = [];
       if (abertas.has(parede)) {
         // Face totalmente aberta (ex.: frente do alpendre, saída do corredor externo, vão livre): sem parede nem verga.
-        aberturas.push({ ini: p.ini, fim: p.fim, peitoril: 0, topo: env.altura + 0.2 });
+        aberturas.push({ ini, fim, peitoril: 0, topo: env.altura + 0.2 });
       }
       for (const j of room.janelas) {
         if (j.parede !== parede) continue;
@@ -284,7 +343,44 @@ export function redeDeParedes(casa, opcoes = {}) {
         const iv = intervaloAbertura(room, p2);
         if (iv) aberturas.push({ ini: iv.ini, fim: iv.fim, peitoril: 0, topo: p2.altura });
       }
-      adicionar({ eixo: p.eixo, coord: p.coord, ini: p.ini, fim: p.fim, comodo: room.id, aberturas });
+      if (fim - ini > EPS) {
+        adicionar({ eixo: p.eixo, coord: p.coord, ini, fim, comodo: room.id, aberturas });
+      }
+    }
+
+    // Parede diagonal do chanfro (ex.: 5ª aresta da Sala com a porta na diagonal!)
+    if (ch && ch.canto === 'frente-esquerda' && ch.dx > 0.05 && ch.dz > 0.05) {
+      const x1 = room.x;
+      const z1 = room.z + room.d - ch.dz;
+      const x2 = room.x + ch.dx;
+      const z2 = room.z + room.d;
+      const comp = Math.hypot(x2 - x1, z2 - z1);
+      const esp = env.espExterna;
+      const alt = env.altura;
+      const pt = (t) => [x1 + (x2 - x1) * t, z1 + (z2 - z1) * t];
+
+      if (ch.porta && comp > 0.2) {
+        const larg = Math.min(ch.porta.largura, comp - 0.08);
+        const t0 = Math.max(0, (comp - larg) / (2 * comp));
+        const t1 = Math.min(1, 1 - t0);
+        if (t0 > 0.01) {
+          const [ax, az] = pt(0);
+          const [bx, bz] = pt(t0);
+          blocosDiagonais.push({ eixo: 'd', x1: ax, z1: az, x2: bx, z2: bz, yBase: 0, yTopo: alt, espessura: esp, externa: true, comodos: [room.id], tipo: 'parede' });
+        }
+        if (1 - t1 > 0.01) {
+          const [ax, az] = pt(t1);
+          const [bx, bz] = pt(1);
+          blocosDiagonais.push({ eixo: 'd', x1: ax, z1: az, x2: bx, z2: bz, yBase: 0, yTopo: alt, espessura: esp, externa: true, comodos: [room.id], tipo: 'parede' });
+        }
+        if (ch.porta.altura < alt - 0.03) {
+          const [ax, az] = pt(t0);
+          const [bx, bz] = pt(t1);
+          blocosDiagonais.push({ eixo: 'd', x1: ax, z1: az, x2: bx, z2: bz, yBase: ch.porta.altura, yTopo: alt, espessura: esp, externa: true, comodos: [room.id], tipo: 'verga' });
+        }
+      } else {
+        blocosDiagonais.push({ eixo: 'd', x1, z1, x2, z2, yBase: 0, yTopo: alt, espessura: esp, externa: true, comodos: [room.id], tipo: 'parede' });
+      }
     }
   }
 
@@ -349,7 +445,7 @@ export function redeDeParedes(casa, opcoes = {}) {
       }
     }
   }
-  return blocos;
+  return [...blocos, ...blocosDiagonais];
 }
 
 /**
@@ -383,6 +479,33 @@ export function aberturasVisiveis(casa) {
           vao: Boolean(a.vao),
         });
       }
+    }
+    // Porta diagonal no chanfro (ex.: porta da Sala no final do alpendre)
+    const ch = room.chanfro;
+    if (ch && ch.canto === 'frente-esquerda' && ch.porta) {
+      const x1 = room.x;
+      const z1 = room.z + room.d - ch.dz;
+      const x2 = room.x + ch.dx;
+      const z2 = room.z + room.d;
+      const comp = Math.hypot(x2 - x1, z2 - z1);
+      const larg = Math.min(ch.porta.largura, comp - 0.08);
+      const t0 = Math.max(0, (comp - larg) / (2 * comp));
+      const t1 = Math.min(1, 1 - t0);
+      saida.push({
+        comodo: room.id,
+        tipo: 'porta',
+        parede: 'chanfro',
+        eixo: 'd',
+        x1: x1 + (x2 - x1) * t0,
+        z1: z1 + (z2 - z1) * t0,
+        x2: x1 + (x2 - x1) * t1,
+        z2: z1 + (z2 - z1) * t1,
+        largura: larg,
+        altura: ch.porta.altura,
+        peitoril: 0,
+        externa: true,
+        vao: false,
+      });
     }
   }
   return saida;
@@ -525,11 +648,13 @@ export function estatisticas(casa) {
       areaJanelas += j.largura * j.altura;
       janelas++;
     }
-    portas += r.portas.length;
+    portas += r.portas.length + (r.chanfro?.porta ? 1 : 0);
   }
   const rede = redeDeParedes(casa);
   for (const b of rede) {
-    if (b.tipo === 'parede') paredes += b.fim - b.ini;
+    if (b.tipo === 'parede') {
+      paredes += b.eixo === 'd' ? Math.hypot(b.x2 - b.x1, b.z2 - b.z1) : b.fim - b.ini;
+    }
   }
   const envArea = areaEnvelope(env);
   return {

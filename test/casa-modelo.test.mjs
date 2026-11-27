@@ -7,6 +7,7 @@ import {
   normalizarCasa,
   areaComodo,
   areaEnvelope,
+  poligonoComodo,
   redeDeParedes,
   aberturasVisiveis,
   completudeComodo,
@@ -24,11 +25,14 @@ import {
 const bruto = JSON.parse(fs.readFileSync(new URL('../app/data/casa.json', import.meta.url), 'utf8'));
 const casa = normalizarCasa(bruto);
 
-test('a planta real tem 10 cômodos e 95 m² dentro do envelope', () => {
+test('a planta real tem 10 cômodos, sala pentagonal (5 arestas) e 94,75 m² dentro do envelope', () => {
   assert.equal(casa.origem, 'planta-real');
   assert.equal(casa.rooms.length, 10);
+  const sala = casa.rooms.find((r) => r.id === 'sala');
+  assert.equal(poligonoComodo(sala).length, 5);
+  assert.equal(+areaComodo(sala).toFixed(2), 13.75);
   const soma = casa.rooms.reduce((total, r) => total + areaComodo(r), 0);
-  assert.equal(+soma.toFixed(2), 95);
+  assert.equal(+soma.toFixed(2), 94.75);
   assert.equal(+((casa.envelope.x1 - casa.envelope.x0).toFixed(2)), 5.2);
   assert.equal(+((casa.envelope.z1 - casa.envelope.z0).toFixed(2)), 19.2);
   assert.ok(soma <= areaEnvelope(casa.envelope));
@@ -94,6 +98,11 @@ test('aberturas e relações reais entre cômodos (9 portas/vãos e 5 janelas)',
   assert.equal(janelas.length, 5);
   assert.ok(portas.every((p) => p.largura > 0.5));
 
+  // Sala tem porta diagonal (menor aresta do pentágono) ao lado da porta perpendicular do corredor
+  const portaDiag = portas.find((p) => p.comodo === 'sala' && p.eixo === 'd');
+  assert.ok(portaDiag, 'deveria existir a porta diagonal da sala no chanfro');
+  assert.equal(portaDiag.parede, 'chanfro');
+
   // Banheiro social rosa abre para o corredor interno (direita)
   const bSocial = casa.rooms.find((r) => r.id === 'banheiro');
   assert.equal(bSocial.portas[0].parede, 'direita');
@@ -122,7 +131,7 @@ test('estatísticas refletem a planta real', () => {
   assert.equal(s.peDireito, 2.7);
   assert.equal(s.portas, 9);
   assert.equal(s.janelas, 5);
-  assert.equal(s.areaComodos, 95);
+  assert.equal(s.areaComodos, 94.8);
   assert.equal(s.areaJanelas, 5.04);
   assert.ok(s.ocupacao > 90 && s.ocupacao <= 100);
 });
