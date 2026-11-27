@@ -103,13 +103,11 @@ function moveisDoComodo(room, grupoMobilia) {
     add(0.35, 0.5, 1.1, w - 0.25, 0.25, d * 0.78, MAT.madeira); // rack da TV
     add(0.06, 0.62, 1.0, w - 0.08, 1.15, d * 0.78, MAT.eletro); // TV
   } else if (tipo === 'quarto' && room.id === 'quarto1') {
-    // Quarto da frente = Escritório
+    // Quarto da frente = Escritório (guarda-roupa de concreto embutido fica na estrutura do quarto)
     add(1.5, 0.75, 0.65, w * 0.5, 0.38, d - 0.55, MAT.madeira); // escrivaninha perto da janela
     add(0.55, 0.48, 0.55, w * 0.5, 0.24, d - 1.25, MAT.mover); // cadeira
-    add(0.42, 1.85, 1.4, w - 0.26, 0.93, d * 0.4, MAT.madeira); // estante
   } else if (tipo === 'quarto' && room.id === 'quarto2') {
-    // Quarto do fundo: guarda-roupa embutido na parede com o banheiro da suíte (frente esquerda)
-    add(1.35, 2.25, 0.58, 0.72, 1.13, d - 0.34, MAT.madeira); // guarda-roupa embutido!
+    // Quarto do fundo (guarda-roupa de concreto e extensão em L do banheiro da suíte ficam na estrutura)
     add(1.45, 0.45, 1.9, w - 1.05, 0.24, 1.15, MAT.mover); // cama
     add(1.45, 0.08, 1.9, w - 1.05, 0.5, 1.15, MAT.louca); // colchão
     add(1.45, 0.7, 0.08, w - 1.05, 0.35, 0.16, MAT.madeira); // cabeceira
@@ -119,6 +117,12 @@ function moveisDoComodo(room, grupoMobilia) {
     add(1.4, 0.7, 0.08, 0.85, 0.35, 0.15, MAT.madeira); // cabeceira
     add(0.45, 0.45, 0.4, 1.75, 0.22, 0.35, MAT.madeira); // criado-mudo
     add(0.55, 2.1, 1.3, w - 0.32, 1.05, d - 1.0, MAT.madeira); // guarda-roupa
+  } else if (tipo === 'banheiro' && room.id === 'banheiro2') {
+    // Banheiro da suíte (L-shape: deixa o canto frente-esquerda livre para a passagem do L!)
+    add(0.9, 0.06, 0.9, w - 0.55, 0.05, d - 0.5, MAT.louca); // base do box
+    add(0.04, 1.9, 0.9, w - 1.02, 0.95, d - 0.5, MAT.vidro); // vidro do box
+    add(0.4, 0.42, 0.58, 1.15, 0.21, d - 0.35, MAT.louca); // vaso
+    add(0.65, 0.12, 0.42, 1.4, 0.82, 0.3, MAT.bancada); // pia
   } else if (tipo === 'banheiro') {
     add(0.9, 0.06, 0.9, 0.5, 0.05, 0.5, MAT.louca); // base do box
     add(0.04, 1.9, 0.9, 0.96, 0.95, 0.5, MAT.vidro); // vidro do box
@@ -274,6 +278,59 @@ export function construirCasa(casa) {
         vidro.position.set(hHorizontal ? a.ini + larg / 2 : a.coord, yCentro, hHorizontal ? a.coord : a.ini + larg / 2);
         vidro.renderOrder = 2;
         grupoExterior.add(vidro);
+      }
+    }
+
+    // ---- Alvenaria / concreto embutido (guarda-roupas de concreto e banheiro da suíte em L) ----
+    for (const room of modelo.rooms) {
+      const alt = env.peDireito;
+      if (room.id === 'quarto2') {
+        // Extensão em L do Banheiro da Suíte (junto à parede da janela x = room.x, profundidade 0,65 m)
+        const prof = 0.65;
+        const largL = 0.85;
+        const zFrente = room.z + room.d; // parede com banheiro2
+        const zFace = zFrente - prof; // face frontal alinhada do L + guarda-roupa de concreto
+        // Piso cerâmico do banheiro continuando dentro do L
+        const matPisoBanho = new THREE.MeshStandardMaterial({ color: PISOS.ceramica.cor, roughness: 0.5 });
+        matPisoBanho.userData.proprio = true;
+        caixa(grupoInterior, largL, 0.045, prof, room.x + largL / 2, 0.025, zFrente - prof / 2, matPisoBanho, false);
+
+        // Parede lateral de concreto separando o L do guarda-roupa embutido (x = room.x + largL)
+        const divL = caixa(grupoInterior, 0.12, alt, prof, room.x + largL, alt / 2, zFrente - prof / 2, MAT.interna);
+        occluders.push(divL);
+        // Verga de concreto + batente da porta do banheiro da suíte na face frontal do L (próxima à janela!)
+        const altPorta = 2.1;
+        if (alt > altPorta + 0.05) {
+          const vergaL = caixa(grupoInterior, largL, alt - altPorta, 0.12, room.x + largL / 2, (altPorta + alt) / 2, zFace, MAT.interna);
+          occluders.push(vergaL);
+        }
+        const largPorta = 0.72;
+        const xPortaCentro = room.x + largL / 2;
+        caixa(grupoInterior, 0.05, altPorta, 0.14, xPortaCentro - largPorta / 2 + 0.025, altPorta / 2, zFace, MAT.batente);
+        caixa(grupoInterior, 0.05, altPorta, 0.14, xPortaCentro + largPorta / 2 - 0.025, altPorta / 2, zFace, MAT.batente);
+        caixa(grupoInterior, largPorta, 0.05, 0.14, xPortaCentro, altPorta - 0.025, zFace, MAT.batente);
+
+        // Guarda-roupa de CONCRETO embutido na parede (logo ao lado do L, até o início da porta do corredor interno)
+        const xIniGR = room.x + largL + 0.06;
+        const largGR = Math.max(0.8, Math.min(1.52, room.w - largL - 1.15));
+        const xCentroGR = xIniGR + largGR / 2;
+        // Estrutura em concreto/alvenaria até o teto
+        const grConcreto = caixa(grupoInterior, largGR, alt, prof, xCentroGR, alt / 2, zFrente - prof / 2, MAT.interna);
+        occluders.push(grConcreto);
+        colisores.push({ x0: xIniGR, x1: xIniGR + largGR, z0: zFace, z1: zFrente });
+        // Portas frontais em madeira embutidas no nicho de concreto (com testeira/maleiro de concreto acima)
+        caixa(grupoInterior, largGR - 0.14, 2.05, 0.04, xCentroGR, 1.05, zFace - 0.01, MAT.madeira);
+      } else if (room.id === 'quarto1') {
+        // Guarda-roupa de CONCRETO embutido na parede do fundo do Quarto da frente (Escritório)
+        const prof = 0.65;
+        const largGR = Math.max(0.8, Math.min(1.65, room.w - 1.25));
+        const xCentroGR = room.x + largGR / 2 + 0.04;
+        const zCentroGR = room.z + prof / 2;
+        const grConcreto = caixa(grupoInterior, largGR, alt, prof, xCentroGR, alt / 2, zCentroGR, MAT.interna);
+        occluders.push(grConcreto);
+        colisores.push({ x0: room.x + 0.04, x1: room.x + 0.04 + largGR, z0: room.z, z1: room.z + prof });
+        // Portas frontais em madeira embutidas no concreto (voltadas para dentro do escritório)
+        caixa(grupoInterior, largGR - 0.14, 2.05, 0.04, xCentroGR, 1.05, room.z + prof + 0.01, MAT.madeira);
       }
     }
 

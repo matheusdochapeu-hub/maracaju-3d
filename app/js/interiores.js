@@ -781,6 +781,48 @@ export function iniciarInteriores(ctx) {
       }
     }
 
+    // Detalhes estruturais em concreto: guarda-roupas embutidos e extensão em L do banheiro da suíte
+    for (const r of casa.rooms) {
+      if (r.id === 'quarto2') {
+        const prof = 0.65;
+        const largL = 0.85;
+        const zFrente = r.z + r.d;
+        const zFace = zFrente - prof;
+        // Braço em L do banheiro da suíte (próximo à janela)
+        g.fillStyle = 'rgba(52, 211, 153, 0.25)';
+        g.fillRect(paraTelaX(r.x), paraTelaY(zFace), largL * esc, prof * esc);
+        g.strokeStyle = 'rgba(243,240,234,0.85)';
+        g.lineWidth = Math.max(2, 0.12 * esc);
+        g.beginPath();
+        g.moveTo(paraTelaX(r.x + largL), paraTelaY(zFrente));
+        g.lineTo(paraTelaX(r.x + largL), paraTelaY(zFace));
+        g.stroke();
+        // Porta do banheiro da suíte na face frontal do L
+        g.strokeStyle = '#fbbf24';
+        g.lineWidth = 2;
+        g.beginPath();
+        g.moveTo(paraTelaX(r.x + 0.08), paraTelaY(zFace));
+        g.lineTo(paraTelaX(r.x + largL - 0.06), paraTelaY(zFace));
+        g.stroke();
+        // Guarda-roupa de concreto embutido
+        const xIniGR = r.x + largL + 0.06;
+        const largGR = Math.max(0.8, Math.min(1.52, r.w - largL - 1.15));
+        g.fillStyle = 'rgba(226, 221, 213, 0.35)';
+        g.strokeStyle = 'rgba(243, 240, 234, 0.85)';
+        g.lineWidth = 1.6;
+        g.fillRect(paraTelaX(xIniGR), paraTelaY(zFace), largGR * esc, prof * esc);
+        g.strokeRect(paraTelaX(xIniGR), paraTelaY(zFace), largGR * esc, prof * esc);
+      } else if (r.id === 'quarto1') {
+        const prof = 0.65;
+        const largGR = Math.max(0.8, Math.min(1.65, r.w - 1.25));
+        g.fillStyle = 'rgba(226, 221, 213, 0.35)';
+        g.strokeStyle = 'rgba(243, 240, 234, 0.85)';
+        g.lineWidth = 1.6;
+        g.fillRect(paraTelaX(r.x + 0.04), paraTelaY(r.z), largGR * esc, prof * esc);
+        g.strokeRect(paraTelaX(r.x + 0.04), paraTelaY(r.z), largGR * esc, prof * esc);
+      }
+    }
+
     // Nomes e medidas
     for (const r of casa.rooms) {
       const cx = paraTelaX(r.x + r.w / 2);
