@@ -36,6 +36,9 @@
       <button class="aba" data-tab="interiores">
         <span aria-hidden="true">🛋️</span><span>Interiores</span>
       </button>
+      <button class="aba" data-tab="moveis">
+        <span aria-hidden="true">🪑</span><span>Móveis</span>
+      </button>
       <button class="aba" data-tab="captura">
         <span aria-hidden="true">📷</span><span>Captura</span>
       </button>
@@ -294,7 +297,67 @@
       <aside class="barra-lateral direita">
         <div class="card">
           <h2 class="h2-editor">✏️ <span id="editorTitulo">Cômodo</span></h2>
+          <button class="btn sm azul full" data-ir="moveis" style="margin-bottom:8px">🪑 Organizar móveis deste cômodo</button>
           <div id="editorComodo"></div>
+        </div>
+      </aside>
+    </section>
+
+    <!-- ================= MÓVEIS & ELETRODOMÉSTICOS ================= -->
+    <section class="tab-view" id="tab-moveis" data-tab="moveis">
+      <aside class="barra-lateral esquerda">
+        <div class="card">
+          <h2>🛋️ Cômodo de destino</h2>
+          <label class="campo">
+            <span>Inserir / ver móveis em</span>
+            <select id="moveisComodoSelect"></select>
+          </label>
+          <p class="ajuda">Tudo que você inserir ou editar aparece em <b>Interiores</b> e na <b>Casa 3D</b> quando tirar o telhado.</p>
+        </div>
+
+        <div class="card">
+          <h2>🪑 Catálogo <span class="contador" id="contadorCatalogoMoveis"></span></h2>
+          <input type="search" id="buscaMoveis" placeholder="🔍 Pesquisar móvel ou eletro..." class="full" style="margin-bottom:8px" />
+          <div id="catsMoveis" class="chips" style="margin-bottom:8px"></div>
+          <button class="btn sm primario full" id="btnNovoMovelCatalogo" style="margin-bottom:8px">＋ Criar novo móvel / eletro</button>
+
+          <div id="formCatalogoMovel" class="form-cat-movel" hidden>
+            <h3 id="formCatTitulo" style="font-size:12px;margin:0 0 6px;color:#86efac">Criar novo móvel</h3>
+            <div id="formCatCampos"></div>
+          </div>
+
+          <div id="listaCatalogoMoveis" class="lista-catalogo-moveis"></div>
+        </div>
+      </aside>
+
+      <div class="palco palco-interior" id="palcoMoveis">
+        <div class="hud hud-sol">
+          <span class="hud-item">🧭 <b data-hud="azimute">—</b></span>
+          <span class="hud-item">📐 <b data-hud="elevacao">—</b></span>
+          <span class="hud-item">🌅 <b data-hud="dia">—</b></span>
+        </div>
+        <div class="hud hud-camera">
+          <button class="chip" id="btnMoveisCasaToda">Casa toda</button>
+          <button class="chip" id="btnMoveisFocarComodo">Focar cômodo</button>
+          <button class="chip" id="btnMoveisIsolar">🔍 Só este cômodo</button>
+          <button class="chip" id="btnMoveisParedes">🧱 Paredes</button>
+        </div>
+        <p class="hud-dica">Clique em qualquer móvel no 3D para selecioná-lo · mova, gire e redimensione no painel à direita</p>
+      </div>
+
+      <aside class="barra-lateral direita">
+        <div class="card">
+          <h2>📋 Móveis na casa <span class="contador" id="contadorMoveisInseridos"></span></h2>
+          <div id="filtroMoveisInseridos" class="chips" style="margin-bottom:8px">
+            <button class="chip ativo" data-filtro-mov="comodo">Neste cômodo</button>
+            <button class="chip" data-filtro-mov="todos">Casa toda</button>
+          </div>
+          <div id="listaMoveisInseridos" class="lista-comodos" style="max-height:220px;overflow-y:auto"></div>
+        </div>
+
+        <div class="card">
+          <h2 class="h2-editor">✏️ <span id="editorMovelTitulo">Móvel selecionado</span></h2>
+          <div id="editorMovel"></div>
         </div>
       </aside>
     </section>

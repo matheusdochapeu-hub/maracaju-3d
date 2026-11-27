@@ -30,7 +30,7 @@ const PRESETS = {
   planta: { pos: [0.7, 32.0, -2.15], alvo: [0.7, 0.0, -2.15] },
 };
 
-export function criarMundo({ obterEstado, obterCasa, aoSelecionarModulo, aoAtualizarSol }) {
+export function criarMundo({ obterEstado, obterCasa, aoSelecionarModulo, aoSelecionarMovel, aoAtualizarSol }) {
   const canvas = document.getElementById('canvas3d');
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'default' });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -660,6 +660,13 @@ export function criarMundo({ obterEstado, obterCasa, aoSelecionarModulo, aoAtual
     return hits.length ? hits[0].object.userData.moduloId || null : null;
   }
 
+  function pickMovel(clientX, clientY) {
+    normalizarPonteiro(clientX, clientY);
+    const visiveis = casa3d.selecionaveisMoveis.filter((m) => visivelNaCena(m));
+    const hits = raycaster.intersectObjects(visiveis, false);
+    return hits.length ? hits[0].object.userData.movelId || null : null;
+  }
+
   function pickChao(clientX, clientY) {
     normalizarPonteiro(clientX, clientY);
     const plano = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
@@ -677,9 +684,14 @@ export function criarMundo({ obterEstado, obterCasa, aoSelecionarModulo, aoAtual
     const dy = e.clientY - Number(canvas.dataset.downY || 0);
     if (Math.hypot(dx, dy) > 6) return;
     const estadoAtual = obterEstado();
-    if (estadoAtual.modo === 'passeio' || estadoAtual.aba !== 'casa3d') return;
-    const id = pickModulo(e.clientX, e.clientY);
-    if (id) aoSelecionarModulo?.(id);
+    if (estadoAtual.modo === 'passeio') return;
+    if (estadoAtual.aba === 'casa3d') {
+      const id = pickModulo(e.clientX, e.clientY);
+      if (id) aoSelecionarModulo?.(id);
+    } else if (estadoAtual.aba === 'moveis' || estadoAtual.aba === 'interiores') {
+      const movId = pickMovel(e.clientX, e.clientY);
+      if (movId) aoSelecionarMovel?.(movId);
+    }
   });
 
   // ---------- Atualização geral ----------
@@ -689,7 +701,7 @@ export function criarMundo({ obterEstado, obterCasa, aoSelecionarModulo, aoAtual
   function atualizarTudo() {
     const estado = obterEstado();
     const casa = obterCasa();
-    const vistaInterior = estado.aba === 'interiores';
+    const vistaInterior = estado.aba === 'interiores' || estado.aba === 'moveis';
     const isolando = vistaInterior && Boolean(estado.isolarComodo) && Boolean(estado.comodoSelecionado);
 
     lote.rotation.y = -THREE.MathUtils.degToRad(estado.lotAzimuth ?? AZIMUTE_PADRAO);
@@ -698,12 +710,12 @@ export function criarMundo({ obterEstado, obterCasa, aoSelecionarModulo, aoAtual
     grupoEntorno.visible = !isolando;
     rosa.visible = !isolando;
 
-    // Telhado e interior
+    // Telhado e interior (na Casa 3D, quando Raio-X remove o telhado, todos os móveis aparecem!)
     const mostrarInterior = vistaInterior || estado.raioX;
     grupoTelhado.visible = !mostrarInterior;
     casa3d.definirVisibilidade({
       interior: mostrarInterior,
-      mobilia: mostrarInterior && estado.mobilia !== false,
+      mobilia: mostrarInterior && (estado.aba === 'moveis' || estado.mobilia !== false),
       etiquetas: mostrarInterior && estado.etiquetas !== false && estado.modo !== 'passeio',
       selecionado: estado.comodoSelecionado,
       isolar: isolando,
@@ -714,6 +726,7 @@ export function criarMundo({ obterEstado, obterCasa, aoSelecionarModulo, aoAtual
       casa3d.destacar(destaque);
       destaqueAtual = destaque;
     }
+    casa3d.destacarMovel(estado.aba === 'moveis' ? estado.movelSelecionado : null);
 
     // Cobertura dos fundos (encostada no muro direito Machado de Assis -> queda p/ esquerda Visconde de Taunay)
     if (isolando || estado.coberturaFundos === 'nenhuma') {
@@ -797,6 +810,11 @@ export function criarMundo({ obterEstado, obterCasa, aoSelecionarModulo, aoAtual
     lote.updateMatrixWorld(true);
   }
 
+  function atualizarMoveis(novaCasa) {
+    casa3d.reconstruirMoveis(novaCasa);
+    lote.updateMatrixWorld(true);
+  }
+
   // ---------- Loop / resize ----------
   let rodando = false;
   function resize() {
@@ -835,6 +853,7 @@ export function criarMundo({ obterEstado, obterCasa, aoSelecionarModulo, aoAtual
     casa3d,
     atualizarTudo,
     definirCasa,
+    atualizarMoveis,
     diagnosticarModulo,
     diagnosticarComodo,
     aplicarPreset,

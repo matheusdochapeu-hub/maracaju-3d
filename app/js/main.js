@@ -10,6 +10,7 @@ import { criarCasaPadrao, normalizarCasa, completudeCasa } from './casa-modelo.j
 import { normalizarFundo } from './planta.js';
 import { criarMundo } from './mundo.js';
 import { iniciarInteriores } from './interiores.js';
+import { iniciarMoveis } from './moveis.js';
 import { iniciarCaptura } from './captura.js';
 import { iniciarLevantamento } from './levantamento.js';
 import { baixarArquivo, escaparHtml, metros } from './utils.js';
@@ -63,8 +64,11 @@ function estadoPadrao() {
     etiquetas: true,
     moduloSelecionado: 'horta_15m',
     comodoSelecionado: 'sala',
+    movelSelecionado: null,
     isolarComodo: false,
     modoParedes: 'inteiras',
+    catalogoEdicoes: {},
+    catalogoPersonalizado: [],
     areaCamera: 'sala',
     plantaEditar: false,
     modulos: modulosPadrao(),
@@ -131,7 +135,7 @@ function carregarEstado() {
     casa: normalizarCasa(salvo.casa),
     plantaFundo: normalizarFundo(salvo.plantaFundo),
   };
-  if (!['casa3d', 'interiores', 'captura', 'levantamento'].includes(estado.aba)) estado.aba = 'casa3d';
+  if (!['casa3d', 'interiores', 'moveis', 'captura', 'levantamento'].includes(estado.aba)) estado.aba = 'casa3d';
   if (!['3d', 'planta', 'passeio'].includes(estado.modo)) estado.modo = '3d';
   if (!Number.isFinite(estado.lat) || !Number.isFinite(estado.lng)) {
     estado.lat = SITE.lat;
@@ -188,9 +192,19 @@ function mostrarToast(mensagem) {
 }
 
 // ============================ MUNDO ============================
+let moveisCtrl = null;
 const mundo = criarMundo({
   obterEstado: () => estado,
   obterCasa: () => casa,
+  aoSelecionarModulo: (id) => selecionarModulo(id),
+  aoSelecionarMovel: (id) => {
+    estado.movelSelecionado = id;
+    moveisCtrl?.selecionarMovel(id, false);
+    if (estado.aba === 'interiores') {
+      const m = casa.moveis.find((x) => x.id === id);
+      if (m) mostrarToast(`Móvel: ${m.nome} — abra a aba Móveis para editar ou mover.`);
+    }
+  },
   aoAtualizarSol: (dados) => {
     document.querySelectorAll('[data-hud="azimute"]').forEach((el) => (el.textContent = dados.azimute));
     document.querySelectorAll('[data-hud="elevacao"]').forEach((el) => (el.textContent = dados.elevacao));
@@ -212,6 +226,20 @@ const interiores = iniciarInteriores({
   toast: mostrarToast,
   contarFotos: () => contagensFotos,
   abrirCamera: (area) => captura?.abrirCamera(area),
+});
+
+// ============================ MÓVEIS ============================
+moveisCtrl = iniciarMoveis({
+  estado,
+  casa,
+  mundo,
+  salvar,
+  atualizarTudo: () => atualizarTudo(),
+  toast: mostrarToast,
+  sincronizarInteriores: () => {
+    interiores.renderTudo();
+    interiores.aplicarModo();
+  },
 });
 
 // ============================ CAPTURA ============================
@@ -271,10 +299,11 @@ function atualizarProgresso() {
 // ============================ ABAS ============================
 const palcoCasa = document.getElementById('palcoCasa');
 const palcoInterior = document.getElementById('palcoInterior');
+const palcoMoveis = document.getElementById('palcoMoveis');
 const canvas3d = document.getElementById('canvas3d');
 
 function irParaAba(aba) {
-  if (!['casa3d', 'interiores', 'captura', 'levantamento'].includes(aba)) return;
+  if (!['casa3d', 'interiores', 'moveis', 'captura', 'levantamento'].includes(aba)) return;
   estado.aba = aba;
   document.querySelectorAll('.tab-view').forEach((s) => s.classList.toggle('ativa', s.dataset.tab === aba));
   document.querySelectorAll('.aba').forEach((b) => {
@@ -289,8 +318,8 @@ function irParaAba(aba) {
     interiores.sairPasseio();
   }
 
-  if (aba === 'casa3d' || aba === 'interiores') {
-    const destino = aba === 'casa3d' ? palcoCasa : palcoInterior;
+  if (aba === 'casa3d' || aba === 'interiores' || aba === 'moveis') {
+    const destino = aba === 'casa3d' ? palcoCasa : aba === 'moveis' ? palcoMoveis : palcoInterior;
     if (canvas3d.parentElement !== destino) destino.prepend(canvas3d);
     requestAnimationFrame(() => {
       mundo.resize();
@@ -298,6 +327,9 @@ function irParaAba(aba) {
       if (aba === 'interiores') {
         interiores.aplicarModo();
         interiores.atualizarSol();
+      } else if (aba === 'moveis') {
+        moveisCtrl?.renderTudo();
+        if (estado.comodoSelecionado) mundo.focarComodo(estado.comodoSelecionado);
       }
     });
   } else {
@@ -752,7 +784,7 @@ async function importarJson(arquivo) {
 
     if (!casa.rooms.some((r) => r.id === estado.comodoSelecionado)) estado.comodoSelecionado = casa.rooms[0]?.id;
     if (!MODULOS[estado.moduloSelecionado]) estado.moduloSelecionado = 'horta_15m';
-    if (!['casa3d', 'interiores', 'captura', 'levantamento'].includes(estado.aba)) estado.aba = 'casa3d';
+    if (!['casa3d', 'interiores', 'moveis', 'captura', 'levantamento'].includes(estado.aba)) estado.aba = 'casa3d';
     if (!['3d', 'planta', 'passeio'].includes(estado.modo)) estado.modo = '3d';
 
     mundo.definirCasa(casa);
@@ -789,6 +821,7 @@ function sincronizarTudo() {
   renderModuloSelecionado();
   interiores.renderTudo();
   interiores.atualizarSol();
+  moveisCtrl?.renderTudo();
   captura.atualizarTudo();
   levantamento.renderTudo();
   atualizarProgresso();
@@ -800,6 +833,7 @@ function aplicarCasa() {
   atualizarTudo();
   salvar();
   interiores.renderTudo();
+  moveisCtrl?.renderTudo();
   levantamento.renderTudo();
 }
 
@@ -855,7 +889,7 @@ sincronizarTerreno();
 renderModulos();
 renderModuloSelecionado();
 sincronizarTudo();
-mundo.aplicarPreset(estado.aba === 'interiores' ? 'casa' : 'geral');
+mundo.aplicarPreset(estado.aba === 'interiores' || estado.aba === 'moveis' ? 'casa' : 'geral');
 mundo.resize();
 
 const observador = new ResizeObserver(() => {
@@ -863,6 +897,7 @@ const observador = new ResizeObserver(() => {
 });
 observador.observe(palcoCasa);
 observador.observe(palcoInterior);
+if (palcoMoveis) observador.observe(palcoMoveis);
 
 mundo.iniciarLoop((dt) => {
   interiores.aoFrame(dt);

@@ -1791,3 +1791,81 @@ code {
     animation: none !important;
   }
 }
+
+/* ================= ABA MÓVEIS ================= */
+.lista-catalogo-moveis {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 360px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.movel-cat-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #0d1721;
+}
+
+.movel-cat-item .ponto {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.movel-cat-item .texto {
+  flex: 1;
+  min-width: 0;
+}
+
+.movel-cat-item .nome {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.movel-cat-item .sub {
+  font-size: 10.5px;
+  color: var(--muted);
+}
+
+.acoes-cat {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.form-cat-movel {
+  background: #09131d;
+  border: 1px solid rgba(34, 197, 94, 0.45);
+  border-radius: 9px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.mov-dpad {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #0b141f;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px;
+  margin: 6px 0 8px;
+}
+
+.mov-setas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}

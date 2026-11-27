@@ -853,6 +853,37 @@ export function iniciarInteriores(ctx) {
       }
     }
 
+    // Móveis editáveis na planta 2D (vinculados à aba Móveis!)
+    if (estado.mobilia !== false && Array.isArray(casa.moveis)) {
+      const visIds = new Set(roomsVisiveis.map((r) => r.id));
+      const porId = new Map(casa.rooms.map((r) => [r.id, r]));
+      for (const m of casa.moveis) {
+        if (!visIds.has(m.comodoId)) continue;
+        const r = porId.get(m.comodoId);
+        if (!r) continue;
+        const cx = paraTelaX(r.x + m.x);
+        const cy = paraTelaY(r.z + m.z);
+        const mw = m.w * esc;
+        const md = m.d * esc;
+        g.save();
+        g.translate(cx, cy);
+        g.rotate((m.rot * Math.PI) / 180);
+        g.fillStyle = hexComAlfa(m.cor || '#8a5a3b', 0.55);
+        g.strokeStyle = m.id === estado.movelSelecionado ? '#22c55e' : 'rgba(255,255,255,0.65)';
+        g.lineWidth = m.id === estado.movelSelecionado ? 2.2 : 1.1;
+        g.fillRect(-mw / 2, -md / 2, mw, md);
+        g.strokeRect(-mw / 2, -md / 2, mw, md);
+        if (Math.max(mw, md) >= 34) {
+          g.fillStyle = '#f8fafc';
+          g.font = '600 9.5px Segoe UI, system-ui, sans-serif';
+          g.textAlign = 'center';
+          g.textBaseline = 'middle';
+          g.fillText(m.nome.slice(0, 14), 0, 0);
+        }
+        g.restore();
+      }
+    }
+
     // Nomes e medidas
     for (const r of roomsVisiveis) {
       const cx = paraTelaX(r.x + r.w / 2);

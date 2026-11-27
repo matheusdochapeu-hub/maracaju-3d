@@ -87,53 +87,120 @@ function criarEtiqueta(nome, areaTxt, cor) {
 }
 
 /**
- * Móveis de referência. São propositalmente simples: servem para reconhecer
- * o cômodo e discutir layout, não para detalhar marcenaria.
- * Coordenadas relativas ao canto (x, z) do cômodo.
+ * Constrói um móvel ou eletrodoméstico 3D realista a partir de `movel` em `casa.moveis`.
+ * Origem local do grupo fica no centro da base (x=0, y=0, z=0), rotacionado por `movel.rot`.
  */
-function moveisDoComodo(room, grupoMobilia) {
-  const { x, z, w, d, tipo } = room;
-  const mx = (fx) => x + fx;
-  const mz = (fz) => z + fz;
-  const add = (bw, bh, bd, fx, fy, fz, mat) => caixa(grupoMobilia, bw, bh, bd, mx(fx), fy, mz(fz), mat);
+function criarMovel3D(movel, room) {
+  const g = new THREE.Group();
+  g.position.set(room.x + movel.x, movel.y || 0, room.z + movel.z);
+  g.rotation.y = THREE.MathUtils.degToRad(-(movel.rot || 0));
+  g.userData.comodos = [movel.comodoId];
+  g.userData.movelId = movel.id;
 
-  if (tipo === 'sala') {
-    add(0.85, 0.75, Math.min(2.0, d - 1.2), 0.55, 0.38, d * 0.45, MAT.mover); // sofá
-    add(0.55, 0.36, 0.55, 1.75, 0.18, d * 0.45, MAT.madeira); // mesa de centro
-    add(0.35, 0.5, 1.1, w - 0.25, 0.25, d * 0.78, MAT.madeira); // rack da TV
-    add(0.06, 0.62, 1.0, w - 0.08, 1.15, d * 0.78, MAT.eletro); // TV
-  } else if (tipo === 'quarto' && room.id === 'quarto1') {
-    // Quarto da frente = Escritório (guarda-roupa de concreto embutido fica na estrutura do quarto)
-    add(1.5, 0.75, 0.65, w * 0.5, 0.38, d - 0.55, MAT.madeira); // escrivaninha perto da janela
-    add(0.55, 0.48, 0.55, w * 0.5, 0.24, d - 1.25, MAT.mover); // cadeira
-  } else if (tipo === 'quarto' && room.id === 'quarto2') {
-    // Quarto do fundo (guarda-roupa de concreto e extensão em L do banheiro da suíte ficam na estrutura)
-    add(1.45, 0.45, 1.9, w - 1.05, 0.24, 1.15, MAT.mover); // cama
-    add(1.45, 0.08, 1.9, w - 1.05, 0.5, 1.15, MAT.louca); // colchão
-    add(1.45, 0.7, 0.08, w - 1.05, 0.35, 0.16, MAT.madeira); // cabeceira
-  } else if (tipo === 'quarto') {
-    add(1.4, 0.45, 1.9, 0.85, 0.24, 1.1, MAT.mover); // cama
-    add(1.4, 0.08, 1.9, 0.85, 0.5, 1.1, MAT.louca); // colchão
-    add(1.4, 0.7, 0.08, 0.85, 0.35, 0.15, MAT.madeira); // cabeceira
-    add(0.45, 0.45, 0.4, 1.75, 0.22, 0.35, MAT.madeira); // criado-mudo
-    add(0.55, 2.1, 1.3, w - 0.32, 1.05, d - 1.0, MAT.madeira); // guarda-roupa
-  } else if (tipo === 'banheiro' && room.id === 'banheiro2') {
-    // Banheiro da suíte (L-shape: deixa o canto frente-esquerda livre para a passagem do L!)
-    add(0.9, 0.06, 0.9, w - 0.55, 0.05, d - 0.5, MAT.louca); // base do box
-    add(0.04, 1.9, 0.9, w - 1.02, 0.95, d - 0.5, MAT.vidro); // vidro do box
-    add(0.4, 0.42, 0.58, 1.15, 0.21, d - 0.35, MAT.louca); // vaso
-    add(0.65, 0.12, 0.42, 1.4, 0.82, 0.3, MAT.bancada); // pia
-  } else if (tipo === 'banheiro') {
-    add(0.9, 0.06, 0.9, 0.5, 0.05, 0.5, MAT.louca); // base do box
-    add(0.04, 1.9, 0.9, 0.96, 0.95, 0.5, MAT.vidro); // vidro do box
-    add(0.4, 0.42, 0.62, 0.35, 0.21, d - 0.45, MAT.louca); // vaso
-    add(0.7, 0.12, 0.45, w - 0.45, 0.82, 0.35, MAT.bancada); // bancada da pia
-    add(0.3, 0.7, 0.3, w - 0.45, 0.38, 0.35, MAT.louca); // coluna da pia
-  } else if (tipo === 'cozinha') {
-    add(Math.min(2.4, w - 0.4), 0.9, 0.6, Math.min(2.4, w - 0.4) / 2 + 0.1, 0.45, 0.35, MAT.bancada); // bancada
-    add(0.6, 0.06, 0.5, 0.9, 0.94, 0.35, MAT.eletro); // fogão
-    add(0.65, 1.8, 0.7, w - 0.45, 0.9, 1.25, MAT.eletro); // geladeira
+  const { w, d, h, forma } = movel;
+  const matCor = new THREE.MeshStandardMaterial({
+    color: movel.cor || '#8a5a3b',
+    roughness: forma === 'tv' || forma === 'geladeira' || forma === 'lavadora' || forma === 'fogao' ? 0.35 : 0.72,
+    metalness: forma === 'tv' || forma === 'geladeira' || forma === 'fogao' ? 0.28 : 0.05,
+  });
+  matCor.userData.proprio = true;
+  const add = (bw, bh, bd, px, py, pz, mat = matCor, cast = true) => caixa(g, bw, bh, bd, px, py, pz, mat, cast);
+
+  if (forma === 'sofa') {
+    const assentoH = h * 0.48;
+    const bracoW = Math.min(0.18, w * 0.14);
+    const encostoD = Math.min(0.22, d * 0.28);
+    add(w, assentoH, d, 0, assentoH / 2, 0);
+    add(w, h - assentoH, encostoD, 0, assentoH + (h - assentoH) / 2, -d / 2 + encostoD / 2);
+    add(bracoW, h * 0.68, d, -w / 2 + bracoW / 2, (h * 0.68) / 2, 0);
+    add(bracoW, h * 0.68, d, w / 2 - bracoW / 2, (h * 0.68) / 2, 0);
+  } else if (forma === 'sofa_l') {
+    const assentoH = h * 0.48;
+    const profBase = Math.min(0.85, d * 0.56);
+    const largChaise = Math.min(0.85, w * 0.4);
+    add(w, assentoH, profBase, 0, assentoH / 2, -d / 2 + profBase / 2);
+    add(largChaise, assentoH, d, -w / 2 + largChaise / 2, assentoH / 2, 0);
+    add(w, h - assentoH, 0.2, 0, assentoH + (h - assentoH) / 2, -d / 2 + 0.1);
+  } else if (forma === 'poltrona') {
+    const assentoH = h * 0.48;
+    add(w * 0.85, assentoH, d * 0.88, 0, assentoH / 2, 0.03);
+    add(w, h, 0.18, 0, h / 2, -d / 2 + 0.09);
+    add(0.14, h * 0.66, d, -w / 2 + 0.07, (h * 0.66) / 2, 0);
+    add(0.14, h * 0.66, d, w / 2 - 0.07, (h * 0.66) / 2, 0);
+  } else if (forma === 'mesa') {
+    const tampoH = Math.min(0.06, h * 0.18);
+    const pe = Math.min(0.06, Math.min(w, d) * 0.12);
+    add(w, tampoH, d, 0, h - tampoH / 2, 0);
+    const peH = Math.max(0.05, h - tampoH);
+    const dx = Math.max(0, w / 2 - pe);
+    const dz = Math.max(0, d / 2 - pe);
+    for (const sx of [-1, 1]) {
+      for (const sz of [-1, 1]) add(pe, peH, pe, sx * dx, peH / 2, sz * dz);
+    }
+  } else if (forma === 'cadeira') {
+    const assentoY = Math.min(0.46, h * 0.48);
+    add(w * 0.88, 0.06, d * 0.85, 0, assentoY, 0);
+    add(w * 0.84, h - assentoY, 0.08, 0, assentoY + (h - assentoY) / 2, -d * 0.38);
+    const pe = 0.045;
+    for (const sx of [-1, 1]) {
+      for (const sz of [-1, 1]) add(pe, assentoY, pe, sx * (w * 0.36), assentoY / 2, sz * (d * 0.34), MAT.eletro);
+    }
+  } else if (forma === 'cama') {
+    const baseH = h * 0.62;
+    add(w, baseH, d, 0, baseH / 2, 0); // estrado
+    add(w * 0.96, h * 0.38, d * 0.95, 0, baseH + (h * 0.38) / 2, 0.02, MAT.louca); // colchão
+    add(w, Math.max(0.95, h * 1.65), 0.09, 0, Math.max(0.95, h * 1.65) / 2, -d / 2 + 0.045, MAT.madeira); // cabeceira
+    // Travesseiros
+    add(w * 0.38, 0.11, 0.34, -w * 0.23, h + 0.05, -d / 2 + 0.28, MAT.louca, false);
+    add(w * 0.38, 0.11, 0.34, w * 0.23, h + 0.05, -d / 2 + 0.28, MAT.louca, false);
+  } else if (forma === 'tv') {
+    add(w, h, Math.max(0.04, d), 0, h / 2, 0);
+    add(w * 0.35, 0.04, Math.max(0.18, d * 2.2), 0, 0.02, 0, MAT.eletro, false);
+  } else if (forma === 'geladeira') {
+    add(w, h, d, 0, h / 2, 0);
+    // Friso divisor freezer/geladeira
+    add(w + 0.01, 0.02, 0.02, 0, h * 0.7, d / 2, MAT.mover, false);
+    add(0.03, h * 0.22, 0.03, -w * 0.38, h * 0.84, d / 2 + 0.015, MAT.mover, false);
+    add(0.03, h * 0.32, 0.03, -w * 0.38, h * 0.45, d / 2 + 0.015, MAT.mover, false);
+  } else if (forma === 'fogao') {
+    add(w, h, d, 0, h / 2, 0);
+    add(w * 0.94, 0.03, d * 0.94, 0, h + 0.01, 0, MAT.mover, false); // mesa queimadores
+    add(w * 0.78, h * 0.45, 0.02, 0, h * 0.42, d / 2 + 0.01, MAT.mover, false); // vidro forno
+  } else if (forma === 'lavadora') {
+    add(w, h, d, 0, h / 2, 0);
+    const visor = new THREE.Mesh(new THREE.CylinderGeometry(Math.min(w, h) * 0.26, Math.min(w, h) * 0.26, 0.04, 18), MAT.mover);
+    visor.rotation.x = Math.PI / 2;
+    visor.position.set(0, h * 0.48, d / 2 + 0.01);
+    g.add(visor);
+  } else if (forma === 'bancada') {
+    add(w, h - 0.06, d * 0.94, 0, (h - 0.06) / 2, 0, MAT.interna);
+    add(w, 0.06, d, 0, h - 0.03, 0);
+  } else if (forma === 'box') {
+    add(w, 0.07, d, 0, 0.035, 0, MAT.louca, false);
+    add(0.04, h, d, w / 2 - 0.02, h / 2, 0, MAT.vidro, false);
+  } else if (forma === 'vaso') {
+    add(w * 0.82, h * 0.56, d * 0.72, 0, (h * 0.56) / 2, d * 0.12, matCor);
+    add(w * 0.92, h, d * 0.28, 0, h / 2, -d * 0.34, matCor);
+  } else if (forma === 'pia') {
+    add(w, 0.12, d, 0, h - 0.06, 0);
+    add(w * 0.84, h - 0.14, d * 0.82, 0, (h - 0.14) / 2, 0, MAT.louca);
+  } else if (forma === 'ar_split') {
+    add(w, h, d, 0, h / 2, 0);
+    add(w * 0.88, 0.03, 0.03, 0, 0.05, d / 2, MAT.mover, false);
+  } else if (forma === 'tapete') {
+    add(w, Math.max(0.015, h), d, 0, Math.max(0.015, h) / 2, 0, matCor, false);
+  } else {
+    // rack, armario, bloco
+    add(w, h, d, 0, h / 2, 0);
   }
+
+  g.traverse((obj) => {
+    if (obj.isMesh) {
+      obj.userData.movelId = movel.id;
+      obj.userData.comodos = [movel.comodoId];
+    }
+  });
+  return g;
 }
 
 export function construirCasa(casa) {
@@ -145,12 +212,15 @@ export function construirCasa(casa) {
   const grupoMobilia = new THREE.Group();
   const grupoEtiquetas = new THREE.Group();
   const grupoDestaque = new THREE.Group();
-  raiz.add(grupoExterior, grupoInterior, grupoMobilia, grupoEtiquetas, grupoDestaque);
+  const grupoDestaqueMovel = new THREE.Group();
+  raiz.add(grupoExterior, grupoInterior, grupoMobilia, grupoEtiquetas, grupoDestaque, grupoDestaqueMovel);
 
   /** Lista de paredes para colisão do passeio (AABB no plano XZ). */
   let colisores = [];
   let occluders = [];
+  let selecionaveisMoveis = [];
   let centroDosComodos = {};
+  let ultimoFiltroVisibilidade = {};
 
   function comodosDaAbertura(a, rooms) {
     const ids = new Set();
@@ -379,14 +449,9 @@ export function construirCasa(casa) {
       }
     }
 
-    // ---- Móveis e etiquetas ----
+    // ---- Móveis editáveis (casa.moveis) e etiquetas ----
+    reconstruirMoveis(modelo);
     for (const room of modelo.rooms) {
-      if (room.mobilia !== false) {
-        const grupoMobComodo = new THREE.Group();
-        grupoMobComodo.userData.comodos = [room.id];
-        moveisDoComodo(room, grupoMobComodo);
-        grupoMobilia.add(grupoMobComodo);
-      }
       const etiqueta = criarEtiqueta(room.nome, `${areaComodo(room).toFixed(1).replace('.', ',')} m²`, room.cor);
       etiqueta.position.set(room.x + room.w / 2, env.peDireito + 0.25, room.z + room.d / 2);
       etiqueta.userData.comodoId = room.id;
@@ -394,6 +459,54 @@ export function construirCasa(casa) {
     }
 
     raiz.userData.colisores = colisores;
+  }
+
+  function reconstruirMoveis(modelo) {
+    modeloAtual = modelo;
+    limparGrupo(grupoMobilia);
+    selecionaveisMoveis = [];
+    const porId = new Map(modelo.rooms.map((r) => [r.id, r]));
+    const lista = Array.isArray(modelo.moveis) ? modelo.moveis : [];
+    for (const movel of lista) {
+      const room = porId.get(movel.comodoId);
+      if (!room) continue;
+      const g = criarMovel3D(movel, room);
+      grupoMobilia.add(g);
+      g.traverse((obj) => {
+        if (obj.isMesh) selecionaveisMoveis.push(obj);
+      });
+    }
+    if (ultimoFiltroVisibilidade && Object.keys(ultimoFiltroVisibilidade).length) {
+      definirVisibilidade(ultimoFiltroVisibilidade);
+    }
+  }
+
+  function destacarMovel(movelId) {
+    limparGrupo(grupoDestaqueMovel);
+    if (!movelId) return;
+    const movel = (modeloAtual.moveis || []).find((m) => m.id === movelId);
+    if (!movel) return;
+    const room = modeloAtual.rooms.find((r) => r.id === movel.comodoId);
+    if (!room) return;
+    const hw = movel.w / 2 + 0.07;
+    const hd = movel.d / 2 + 0.07;
+    const pts = [
+      new THREE.Vector3(-hw, 0.09, -hd),
+      new THREE.Vector3(hw, 0.09, -hd),
+      new THREE.Vector3(hw, 0.09, hd),
+      new THREE.Vector3(-hw, 0.09, hd),
+      new THREE.Vector3(-hw, 0.09, -hd),
+    ];
+    const linha = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints(pts),
+      new THREE.LineBasicMaterial({ color: 0x22c55e })
+    );
+    linha.material.userData.proprio = true;
+    const wrap = new THREE.Group();
+    wrap.position.set(room.x + movel.x, 0, room.z + movel.z);
+    wrap.rotation.y = THREE.MathUtils.degToRad(-(movel.rot || 0));
+    wrap.add(linha);
+    grupoDestaqueMovel.add(wrap);
   }
 
   function destacar(roomId) {
@@ -436,6 +549,7 @@ export function construirCasa(casa) {
   }
 
   function definirVisibilidade({ interior = true, mobilia = true, etiquetas = true, selecionado = null, isolar = false, paredes = 'inteiras' } = {}) {
+    ultimoFiltroVisibilidade = { interior, mobilia, etiquetas, selecionado, isolar, paredes };
     const isolado = isolar && selecionado ? selecionado : null;
     const modoParedes = paredes === false ? 'ocultas' : paredes === 'baixas' || paredes === 'ocultas' ? paredes : 'inteiras';
 
@@ -496,13 +610,18 @@ export function construirCasa(casa) {
   return {
     raiz,
     reconstruir,
+    reconstruirMoveis,
     destacar,
+    destacarMovel,
     definirVisibilidade,
     get colisores() {
       return raiz.userData.colisores || [];
     },
     get occluders() {
       return occluders;
+    },
+    get selecionaveisMoveis() {
+      return selecionaveisMoveis;
     },
     centroDoComodo(id) {
       return centroDosComodos[id] || null;

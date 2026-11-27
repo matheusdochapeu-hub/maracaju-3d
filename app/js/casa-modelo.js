@@ -13,6 +13,7 @@
  */
 
 import { CORES_COMODO, ROTEIRO_CAPTURA } from './config.js';
+import { gerarMoveisIniciaisDaCasa, normalizarMovel } from './moveis-catalogo.js';
 
 export const EPS = 0.001;
 const TOL_EXTERNA = 0.16;
@@ -94,6 +95,7 @@ export function criarCasaPadrao() {
         mobilia: false,
       },
     ],
+    moveis: [],
     atualizadoEm: null,
   };
 }
@@ -218,12 +220,16 @@ export function normalizarCasa(bruta) {
     });
 
   if (rooms.length === 0) return padrao;
+  const moveis = Array.isArray(bruta.moveis)
+    ? bruta.moveis.filter((m) => m && typeof m === 'object').map((m) => normalizarMovel(m, rooms))
+    : gerarMoveisIniciaisDaCasa(rooms);
   return {
     versao: 1,
     origem: typeof bruta.origem === 'string' && bruta.origem ? bruta.origem : 'sem-origem',
     fonte: typeof bruta.fonte === 'string' ? bruta.fonte.slice(0, 300) : '',
     envelope: env,
     rooms,
+    moveis,
     atualizadoEm: bruta.atualizadoEm || null,
   };
 }
