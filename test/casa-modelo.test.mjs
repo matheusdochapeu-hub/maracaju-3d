@@ -87,15 +87,15 @@ test('muro esquerdo é divisa fechada (sem janelas para rua lateral) e janelas i
   assert.equal(janelasMuroEsq.length, 0);
 
   const janelasCorredorExt = aberturas.filter((a) => a.tipo === 'janela' && a.eixo === 'v' && Math.abs(a.coord - -0.25) < 0.05);
-  assert.equal(janelasCorredorExt.length, 4); // cozinha, banheiro social rosa, banheiro suíte, quarto do fundo
+  assert.equal(janelasCorredorExt.length, 5); // sala, cozinha, banheiro social rosa, banheiro suíte, quarto do fundo
 });
 
-test('aberturas e relações reais entre cômodos (9 portas/vãos e 5 janelas)', () => {
+test('aberturas e relações reais entre cômodos (9 portas/vãos e 6 janelas)', () => {
   const aberturas = aberturasVisiveis(casa);
   const portas = aberturas.filter((a) => a.tipo === 'porta');
   const janelas = aberturas.filter((a) => a.tipo === 'janela');
   assert.equal(portas.length, 9);
-  assert.equal(janelas.length, 5);
+  assert.equal(janelas.length, 6);
   assert.ok(portas.every((p) => p.largura > 0.5));
 
   // Sala tem porta diagonal (menor aresta do pentágono) ao lado da porta perpendicular do corredor
@@ -130,9 +130,9 @@ test('estatísticas refletem a planta real', () => {
   assert.equal(s.comprimento, 19.2);
   assert.equal(s.peDireito, 2.7);
   assert.equal(s.portas, 9);
-  assert.equal(s.janelas, 5);
+  assert.equal(s.janelas, 6);
   assert.equal(s.areaComodos, 94.8);
-  assert.equal(s.areaJanelas, 5.04);
+  assert.equal(s.areaJanelas, 6.36);
   assert.ok(s.ocupacao > 90 && s.ocupacao <= 100);
 });
 
