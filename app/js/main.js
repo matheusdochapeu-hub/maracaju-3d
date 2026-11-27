@@ -11,6 +11,7 @@ import { normalizarFundo } from './planta.js';
 import { criarMundo } from './mundo.js';
 import { iniciarInteriores } from './interiores.js';
 import { iniciarMoveis } from './moveis.js';
+import { iniciarRender } from './render.js';
 import { iniciarCaptura } from './captura.js';
 import { iniciarLevantamento } from './levantamento.js';
 import { baixarArquivo, escaparHtml, metros } from './utils.js';
@@ -59,6 +60,8 @@ function estadoPadrao() {
     hora: 9.5,
     coberturaFundos: 'nenhuma',
     raioX: false,
+    renderRealista: false,
+    luzRender: 'dia',
     satelite: false,
     mobilia: true,
     etiquetas: true,
@@ -135,7 +138,7 @@ function carregarEstado() {
     casa: normalizarCasa(salvo.casa),
     plantaFundo: normalizarFundo(salvo.plantaFundo),
   };
-  if (!['casa3d', 'interiores', 'moveis', 'captura', 'levantamento'].includes(estado.aba)) estado.aba = 'casa3d';
+  if (!['casa3d', 'interiores', 'moveis', 'render', 'captura', 'levantamento'].includes(estado.aba)) estado.aba = 'casa3d';
   if (!['3d', 'planta', 'passeio'].includes(estado.modo)) estado.modo = '3d';
   if (!Number.isFinite(estado.lat) || !Number.isFinite(estado.lng)) {
     estado.lat = SITE.lat;
@@ -193,12 +196,17 @@ function mostrarToast(mensagem) {
 
 // ============================ MUNDO ============================
 let moveisCtrl = null;
+let renderCtrl = null;
 const mundo = criarMundo({
   obterEstado: () => estado,
   obterCasa: () => casa,
   aoSelecionarModulo: (id) => selecionarModulo(id),
   aoSelecionarMovel: (id) => {
     estado.movelSelecionado = id;
+    if (estado.aba === 'render') {
+      renderCtrl?.selecionarMovelDo3D(id);
+      return;
+    }
     moveisCtrl?.selecionarMovel(id, false);
     if (estado.aba === 'interiores') {
       const m = casa.moveis.find((x) => x.id === id);
@@ -239,6 +247,22 @@ moveisCtrl = iniciarMoveis({
   sincronizarInteriores: () => {
     interiores.renderTudo();
     interiores.aplicarModo();
+    renderCtrl?.renderTudo();
+  },
+});
+
+// ============================ RENDER ============================
+renderCtrl = iniciarRender({
+  estado,
+  casa,
+  mundo,
+  salvar,
+  atualizarTudo: () => atualizarTudo(),
+  toast: mostrarToast,
+  sincronizarInteriores: () => {
+    interiores.renderTudo();
+    interiores.aplicarModo();
+    moveisCtrl?.renderTudo();
   },
 });
 
@@ -300,10 +324,11 @@ function atualizarProgresso() {
 const palcoCasa = document.getElementById('palcoCasa');
 const palcoInterior = document.getElementById('palcoInterior');
 const palcoMoveis = document.getElementById('palcoMoveis');
+const palcoRender = document.getElementById('palcoRender');
 const canvas3d = document.getElementById('canvas3d');
 
 function irParaAba(aba) {
-  if (!['casa3d', 'interiores', 'moveis', 'captura', 'levantamento'].includes(aba)) return;
+  if (!['casa3d', 'interiores', 'moveis', 'render', 'captura', 'levantamento'].includes(aba)) return;
   estado.aba = aba;
   document.querySelectorAll('.tab-view').forEach((s) => s.classList.toggle('ativa', s.dataset.tab === aba));
   document.querySelectorAll('.aba').forEach((b) => {
@@ -318,8 +343,9 @@ function irParaAba(aba) {
     interiores.sairPasseio();
   }
 
-  if (aba === 'casa3d' || aba === 'interiores' || aba === 'moveis') {
-    const destino = aba === 'casa3d' ? palcoCasa : aba === 'moveis' ? palcoMoveis : palcoInterior;
+  if (aba === 'casa3d' || aba === 'interiores' || aba === 'moveis' || aba === 'render') {
+    const destino =
+      aba === 'casa3d' ? palcoCasa : aba === 'moveis' ? palcoMoveis : aba === 'render' ? palcoRender : palcoInterior;
     if (canvas3d.parentElement !== destino) destino.prepend(canvas3d);
     requestAnimationFrame(() => {
       mundo.resize();
@@ -329,6 +355,9 @@ function irParaAba(aba) {
         interiores.atualizarSol();
       } else if (aba === 'moveis') {
         moveisCtrl?.renderTudo();
+        if (estado.comodoSelecionado) mundo.focarComodo(estado.comodoSelecionado);
+      } else if (aba === 'render') {
+        renderCtrl?.renderTudo();
         if (estado.comodoSelecionado) mundo.focarComodo(estado.comodoSelecionado);
       }
     });
@@ -374,6 +403,13 @@ function sincronizarControlesSol() {
   if (btnRaioX) {
     btnRaioX.textContent = estado.raioX ? '👁️ Só o telhado' : '👁️ Ver por dentro';
     btnRaioX.classList.toggle('ativo', estado.raioX);
+  }
+  const btnRenderCasa = document.getElementById('btnRenderRealistaCasa');
+  if (btnRenderCasa) {
+    btnRenderCasa.textContent = estado.renderRealista
+      ? '✨ Render realista: Ligado'
+      : '✨ Render realista: Desligado';
+    btnRenderCasa.classList.toggle('ativo', Boolean(estado.renderRealista));
   }
 }
 
@@ -440,6 +476,19 @@ document.addEventListener('click', (e) => {
     atualizarTudo();
     sincronizarControlesSol();
     mostrarToast(estado.raioX ? 'Telhado escondido: interiores visíveis.' : 'Telhado de volta.');
+    return;
+  }
+  const btnRealista = e.target.closest('#btnRenderRealistaCasa');
+  if (btnRealista) {
+    estado.renderRealista = !estado.renderRealista;
+    salvar();
+    atualizarTudo();
+    sincronizarControlesSol();
+    mostrarToast(
+      estado.renderRealista
+        ? 'Render realista ativado na Casa 3D (texturas + iluminação natural).'
+        : 'Visualização técnica 3D restaurada.'
+    );
     return;
   }
   const cam = e.target.closest('[data-cam]');
@@ -784,7 +833,7 @@ async function importarJson(arquivo) {
 
     if (!casa.rooms.some((r) => r.id === estado.comodoSelecionado)) estado.comodoSelecionado = casa.rooms[0]?.id;
     if (!MODULOS[estado.moduloSelecionado]) estado.moduloSelecionado = 'horta_15m';
-    if (!['casa3d', 'interiores', 'moveis', 'captura', 'levantamento'].includes(estado.aba)) estado.aba = 'casa3d';
+    if (!['casa3d', 'interiores', 'moveis', 'render', 'captura', 'levantamento'].includes(estado.aba)) estado.aba = 'casa3d';
     if (!['3d', 'planta', 'passeio'].includes(estado.modo)) estado.modo = '3d';
 
     mundo.definirCasa(casa);
@@ -822,6 +871,7 @@ function sincronizarTudo() {
   interiores.renderTudo();
   interiores.atualizarSol();
   moveisCtrl?.renderTudo();
+  renderCtrl?.renderTudo();
   captura.atualizarTudo();
   levantamento.renderTudo();
   atualizarProgresso();
@@ -834,6 +884,7 @@ function aplicarCasa() {
   salvar();
   interiores.renderTudo();
   moveisCtrl?.renderTudo();
+  renderCtrl?.renderTudo();
   levantamento.renderTudo();
 }
 
@@ -856,7 +907,11 @@ modalAjuda.addEventListener('click', (e) => {
   if (e.target === modalAjuda) modalAjuda.hidden = true;
 });
 window.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape' && !modalAjuda.hidden) modalAjuda.hidden = true;
+  if (e.key === 'Escape') {
+    if (!modalAjuda.hidden) modalAjuda.hidden = true;
+    const modalComp = document.getElementById('modalCompararRender');
+    if (modalComp && !modalComp.hidden) modalComp.hidden = true;
+  }
 });
 
 const cardComece = document.getElementById('cardComece');
@@ -889,7 +944,7 @@ sincronizarTerreno();
 renderModulos();
 renderModuloSelecionado();
 sincronizarTudo();
-mundo.aplicarPreset(estado.aba === 'interiores' || estado.aba === 'moveis' ? 'casa' : 'geral');
+mundo.aplicarPreset(['interiores', 'moveis', 'render'].includes(estado.aba) ? 'casa' : 'geral');
 mundo.resize();
 
 const observador = new ResizeObserver(() => {
@@ -898,6 +953,7 @@ const observador = new ResizeObserver(() => {
 observador.observe(palcoCasa);
 observador.observe(palcoInterior);
 if (palcoMoveis) observador.observe(palcoMoveis);
+if (palcoRender) observador.observe(palcoRender);
 
 mundo.iniciarLoop((dt) => {
   interiores.aoFrame(dt);

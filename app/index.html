@@ -39,6 +39,9 @@
       <button class="aba" data-tab="moveis">
         <span aria-hidden="true">🪑</span><span>Móveis</span>
       </button>
+      <button class="aba" data-tab="render">
+        <span aria-hidden="true">🎨</span><span>Render</span>
+      </button>
       <button class="aba" data-tab="captura">
         <span aria-hidden="true">📷</span><span>Captura</span>
       </button>
@@ -88,6 +91,7 @@
             <button class="btn sm" data-sol="animar">▶ Rodar o dia</button>
             <button class="btn sm" data-sol="raiox" id="btnRaioX">👁️ Ver por dentro</button>
           </div>
+          <button class="btn sm full" id="btnRenderRealistaCasa" style="margin-top:6px">✨ Render realista: Desligado</button>
           <button class="btn sm full" id="btnToggleCobertura" style="margin-top:6px">🏗️ Cobertura dos fundos: Desligada (adicionar)</button>
           <p class="ajuda" id="textoSol">No verão o sol fica mais alto; no inverno entra mais fundo pelas janelas.</p>
         </div>
@@ -297,7 +301,10 @@
       <aside class="barra-lateral direita">
         <div class="card">
           <h2 class="h2-editor">✏️ <span id="editorTitulo">Cômodo</span></h2>
-          <button class="btn sm azul full" data-ir="moveis" style="margin-bottom:8px">🪑 Organizar móveis deste cômodo</button>
+          <div class="grade2" style="margin-bottom:8px">
+            <button class="btn sm azul full" data-ir="moveis">🪑 Móveis</button>
+            <button class="btn sm primario full" data-ir="render">🎨 Renderizar</button>
+          </div>
           <div id="editorComodo"></div>
         </div>
       </aside>
@@ -358,6 +365,118 @@
         <div class="card">
           <h2 class="h2-editor">✏️ <span id="editorMovelTitulo">Móvel selecionado</span></h2>
           <div id="editorMovel"></div>
+        </div>
+      </aside>
+    </section>
+
+    <!-- ================= RENDER & TEXTURAS ================= -->
+    <section class="tab-view" id="tab-render" data-tab="render">
+      <aside class="barra-lateral esquerda">
+        <div class="card">
+          <h2>🎨 Cômodo e Camada</h2>
+          <label class="campo">
+            <span>Cômodo selecionado</span>
+            <select id="renderComodoSelect"></select>
+          </label>
+          <div id="renderCamadas" class="chips" role="group" aria-label="Camada para texturizar" style="margin-bottom:8px">
+            <button type="button" class="chip ativo" data-camada="piso">🟫 Piso</button>
+            <button type="button" class="chip" data-camada="parede">🧱 Paredes</button>
+            <button type="button" class="chip" data-camada="movel">🪑 Móvel / Eletro</button>
+          </div>
+
+          <div id="wrapRenderMovel" hidden>
+            <label class="campo">
+              <span>Móvel ou eletrodoméstico</span>
+              <select id="renderMovelSelect"></select>
+            </label>
+            <div id="renderSemMovelAviso" hidden>
+              <p class="ajuda" style="margin-bottom:6px">Este cômodo ainda não tem móveis.</p>
+              <button type="button" class="btn sm azul full" data-ir="moveis">🪑 Ir para aba Móveis</button>
+            </div>
+          </div>
+
+          <div class="render-status-box">
+            <div id="renderAtualInfo"></div>
+            <button type="button" class="btn sm" id="btnRenderResetCamada" title="Voltar ao padrão">↺ Padrão</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>📷 Foto Real ou Internet</h2>
+          <p class="ajuda" style="margin-bottom:8px">Use a foto do piso, parede ou móvel real da casa — ou uma referência da internet — direto no 3D.</p>
+          <div class="grade2" style="margin-bottom:8px">
+            <label class="btn sm primario full" for="inputRenderCamera">📸 Tirar foto</label>
+            <input type="file" id="inputRenderCamera" accept="image/*" capture="environment" hidden />
+            <label class="btn sm full" for="inputRenderGaleria">🖼️ Galeria</label>
+            <input type="file" id="inputRenderGaleria" accept="image/*" hidden />
+          </div>
+
+          <label class="campo">
+            <span>Pesquisar textura na internet</span>
+            <input type="search" id="buscaWebTextura" placeholder="Ex.: porcelanato calacatta, sofá linho..." />
+          </label>
+          <div id="linksWebTextura" class="chips" style="margin-bottom:8px"></div>
+
+          <div class="linha" style="gap:6px;margin-bottom:8px">
+            <input type="url" id="inputRenderUrl" placeholder="Colar URL direta de imagem (https://...)" style="flex:1;min-width:0" />
+            <button type="button" class="btn sm azul" id="btnAplicarRenderUrl">Aplicar</button>
+          </div>
+
+          <div class="grade2">
+            <label class="campo">
+              <span>Escala <b id="lblRenderRep">3,0×</b></span>
+              <input type="range" id="renderRep" min="0.5" max="10" step="0.5" value="3" />
+            </label>
+            <label class="campo">
+              <span>Acabamento</span>
+              <select id="renderAcabamento">
+                <option value="fosco">Fosco</option>
+                <option value="acetinado" selected>Acetinado</option>
+                <option value="polido">Polido / Brilho</option>
+                <option value="metalico">Metálico / Inox</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>🧱 Biblioteca de Texturas <span class="contador" id="contadorTexturasRender">0</span></h2>
+          <input type="search" id="buscaTexturaRender" placeholder="🔍 Filtrar texturas prontas..." class="full" style="margin-bottom:8px" />
+          <div id="gradeTexturasRender" class="grade-texturas"></div>
+        </div>
+      </aside>
+
+      <div class="palco palco-interior" id="palcoRender">
+        <div class="hud hud-sol">
+          <button type="button" class="chip ativo" data-luz-render="dia">☀️ Dia</button>
+          <button type="button" class="chip" data-luz-render="tarde">🌅 Fim de tarde</button>
+          <button type="button" class="chip" data-luz-render="noite">🌙 Noite (LED)</button>
+        </div>
+        <div class="hud hud-camera">
+          <button type="button" class="chip" id="btnRenderDentro">👁️ Dentro do cômodo</button>
+          <button type="button" class="chip" id="btnRender34">📐 Visão 3/4</button>
+          <button type="button" class="chip" id="btnRenderCasaToda">🏠 Casa toda</button>
+          <button type="button" class="chip" id="btnRenderIsolar">🔍 Só este cômodo</button>
+          <button type="button" class="chip" id="btnRenderParedes">🧱 Paredes inteiras</button>
+          <button type="button" class="chip" id="btnRenderMarcarAntes">📌 Salvar "Antes"</button>
+          <button type="button" class="chip" id="btnRenderComparar" disabled>🔁 Antes × Depois</button>
+          <button type="button" class="chip" id="btnRenderBaixarPng">📸 Baixar PNG</button>
+        </div>
+        <p class="hud-dica">Render realista PBR · clique em qualquer móvel no 3D para trocar o acabamento dele separadamente</p>
+      </div>
+
+      <aside class="barra-lateral direita">
+        <div class="card">
+          <h2>🗂️ Itens deste cômodo</h2>
+          <p class="ajuda" style="margin-bottom:8px">Toque em qualquer item para alterar a textura separadamente.</p>
+          <div id="resumoCamadasRender" class="lista-comodos" style="max-height:260px;overflow-y:auto"></div>
+          <button type="button" class="btn sm perigo full" id="btnRenderLimparComodo" style="margin-top:8px">↺ Restaurar este cômodo</button>
+        </div>
+
+        <div class="card">
+          <h2>✨ Sugestões de Reforma</h2>
+          <p class="ajuda" style="margin-bottom:8px">Teste combinações prontas de piso + parede em 1 clique e compare o Antes × Depois.</p>
+          <div id="listaSugestoesReforma" class="lista-sugestoes"></div>
         </div>
       </aside>
     </section>
@@ -616,6 +735,30 @@
             <div id="wallItemsList" class="lista-comodos"></div>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= COMPARAR ANTES × DEPOIS ================= -->
+  <div class="modal" id="modalCompararRender" hidden>
+    <div class="modal-card modal-comparar" role="dialog" aria-modal="true" aria-label="Comparar Antes e Depois">
+      <header class="modal-topo">
+        <b>🔁 Comparação Antes × Depois</b>
+        <button class="btn sm icone" id="btnFecharComparar" aria-label="Fechar comparação">✕</button>
+      </header>
+      <p class="ajuda" id="compararRenderNota" style="margin-bottom:8px"></p>
+      <div class="comparar-grade">
+        <figure class="comparar-lado">
+          <figcaption>📌 Antes</figcaption>
+          <img id="imgRenderAntes" alt="Estado anterior do cômodo" />
+        </figure>
+        <figure class="comparar-lado">
+          <figcaption>✨ Depois (Simulação)</figcaption>
+          <img id="imgRenderDepois" alt="Simulação atual do cômodo" />
+        </figure>
+      </div>
+      <div class="linha" style="margin-top:10px;justify-content:flex-end">
+        <button type="button" class="btn sm primario" id="btnBaixarRenderDepois">📸 Baixar "Depois" em PNG</button>
       </div>
     </div>
   </div>

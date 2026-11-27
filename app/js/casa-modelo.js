@@ -96,6 +96,7 @@ export function criarCasaPadrao() {
       },
     ],
     moveis: [],
+    materiais: {},
     atualizadoEm: null,
   };
 }
@@ -223,6 +224,19 @@ export function normalizarCasa(bruta) {
   const moveis = Array.isArray(bruta.moveis)
     ? bruta.moveis.filter((m) => m && typeof m === 'object').map((m) => normalizarMovel(m, rooms))
     : gerarMoveisIniciaisDaCasa(rooms);
+  const materiais = {};
+  if (bruta.materiais && typeof bruta.materiais === 'object') {
+    for (const [k, v] of Object.entries(bruta.materiais)) {
+      if (!v || typeof v !== 'object') continue;
+      materiais[String(k).slice(0, 80)] = {
+        ...(v.texturaId ? { texturaId: String(v.texturaId).slice(0, 60) } : {}),
+        ...(v.fotoUrl ? { fotoUrl: String(v.fotoUrl) } : {}),
+        ...(Number.isFinite(Number(v.rep)) ? { rep: Math.min(12, Math.max(0.5, Number(v.rep))) } : {}),
+        ...(v.acabamento ? { acabamento: String(v.acabamento).slice(0, 20) } : {}),
+        ...(v.rotulo ? { rotulo: String(v.rotulo).slice(0, 60) } : {}),
+      };
+    }
+  }
   return {
     versao: 1,
     origem: typeof bruta.origem === 'string' && bruta.origem ? bruta.origem : 'sem-origem',
@@ -230,6 +244,7 @@ export function normalizarCasa(bruta) {
     envelope: env,
     rooms,
     moveis,
+    materiais,
     atualizadoEm: bruta.atualizadoEm || null,
   };
 }

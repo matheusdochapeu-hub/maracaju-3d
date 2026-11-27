@@ -8,6 +8,80 @@
 
 import * as THREE from 'three';
 import { aberturasVisiveis, areaComodo, PISOS, poligonoComodo, redeDeParedes } from './casa-modelo.js';
+import { ACABAMENTOS, desenharTexturaProcedural, texturaPorId } from './texturas.js';
+
+const cacheTexProcedural = new Map();
+const cacheTexFoto = new Map();
+const loaderImg = new THREE.TextureLoader();
+loaderImg.setCrossOrigin('anonymous');
+
+function obterThreeTextura(cfg, repPadrao = 2) {
+  if (!cfg) return null;
+  const rep = cfg.rep || repPadrao;
+  if (cfg.fotoUrl) {
+    const chave = `${cfg.fotoUrl.slice(0, 120)}:${rep}`;
+    if (!cacheTexFoto.has(chave)) {
+      const tex = loaderImg.load(cfg.fotoUrl);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.wrapT = THREE.RepeatWrapping;
+      tex.repeat.set(rep, rep);
+      cacheTexFoto.set(chave, tex);
+    }
+    return cacheTexFoto.get(chave);
+  }
+  if (cfg.texturaId) {
+    const spec = texturaPorId(cfg.texturaId);
+    if (!spec) return null;
+    const rFinal = cfg.rep || spec.rep || repPadrao;
+    const chave = `${spec.id}:${rFinal}`;
+    if (!cacheTexProcedural.has(chave)) {
+      const canvas = desenharTexturaProcedural(spec, 256);
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.wrapT = THREE.RepeatWrapping;
+      tex.repeat.set(rFinal, rFinal);
+      cacheTexProcedural.set(chave, tex);
+    }
+    return cacheTexProcedural.get(chave);
+  }
+  return null;
+}
+
+function texturaPadraoPisoComodo(room) {
+  if (room.piso === 'ceramica_rosa' || room.id === 'banheiro') return 'piso_ceramica_rosa';
+  if (room.piso === 'madeira') return 'piso_madeira_carvalho';
+  if (room.piso === 'porcelanato') return 'piso_porcelanato_claro';
+  if (room.piso === 'cimento') return 'piso_cimento_queimado';
+  if (room.piso === 'ceramica') return 'piso_ceramica_classica';
+  return 'piso_porcelanato_claro';
+}
+
+function texturaPadraoParedeComodo(room) {
+  if (room.id === 'banheiro') return 'par_azulejo_rosa';
+  if (room.tipo === 'banheiro') return 'par_marmore_claro';
+  if (room.tipo === 'cozinha') return 'par_azulejo_metro';
+  if (room.tipo === 'sala') return 'par_offwhite';
+  return 'par_branco_gelo';
+}
+
+function criarMaterialComTextura(cfg, corFallback, roughnessFallback = 0.72, metalnessFallback = 0.05) {
+  const spec = cfg?.texturaId ? texturaPorId(cfg.texturaId) : null;
+  const acab = ACABAMENTOS[cfg?.acabamento || spec?.acabamento] || null;
+  const tex = obterThreeTextura(cfg);
+  const mat = new THREE.MeshStandardMaterial({
+    color: tex ? 0xffffff : corFallback,
+    map: tex || null,
+    bumpMap: tex || null,
+    bumpScale: tex ? 0.015 : 0,
+    roughness: acab ? acab.roughness : roughnessFallback,
+    metalness: acab ? acab.metalness : metalnessFallback,
+  });
+  mat.userData.proprio = true;
+  mat.userData.preservarTextura = true;
+  return mat;
+}
 
 const MAT = {
   externa: new THREE.MeshStandardMaterial({ color: 0xe2ddd5, roughness: 0.86, metalness: 0.02 }),
@@ -44,9 +118,14 @@ function limparGrupo(grupo) {
   grupo.traverse((obj) => {
     if (obj.isMesh || obj.isLine || obj.isSprite) {
       obj.geometry?.dispose?.();
-      if (obj.material && obj.material.userData?.proprio) {
-        obj.material.map?.dispose?.();
-        obj.material.dispose?.();
+      if (obj.material) {
+        const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+        for (const m of mats) {
+          if (m && m.userData?.proprio) {
+            if (!m.userData.preservarTextura) m.map?.dispose?.();
+            m.dispose?.();
+          }
+        }
       }
     }
   });
@@ -90,7 +169,7 @@ function criarEtiqueta(nome, areaTxt, cor) {
  * Constrói um móvel ou eletrodoméstico 3D realista a partir de `movel` em `casa.moveis`.
  * Origem local do grupo fica no centro da base (x=0, y=0, z=0), rotacionado por `movel.rot`.
  */
-function criarMovel3D(movel, room) {
+function criarMovel3D(movel, room, matCfg = null, modoRealista = false) {
   const g = new THREE.Group();
   g.position.set(room.x + movel.x, movel.y || 0, room.z + movel.z);
   g.rotation.y = THREE.MathUtils.degToRad(-(movel.rot || 0));
@@ -98,11 +177,22 @@ function criarMovel3D(movel, room) {
   g.userData.movelId = movel.id;
 
   const { w, d, h, forma } = movel;
-  const matCor = new THREE.MeshStandardMaterial({
-    color: movel.cor || '#8a5a3b',
-    roughness: forma === 'tv' || forma === 'geladeira' || forma === 'lavadora' || forma === 'fogao' ? 0.35 : 0.72,
-    metalness: forma === 'tv' || forma === 'geladeira' || forma === 'fogao' ? 0.28 : 0.05,
-  });
+  const roughBase = forma === 'tv' || forma === 'geladeira' || forma === 'lavadora' || forma === 'fogao' ? 0.35 : 0.72;
+  const metalBase = forma === 'tv' || forma === 'geladeira' || forma === 'fogao' ? 0.28 : 0.05;
+  let cfgEfetivo = matCfg;
+  if (!cfgEfetivo && modoRealista) {
+    if (forma === 'sofa' || forma === 'sofa_l' || forma === 'poltrona') cfgEfetivo = { texturaId: 'mov_linho_cinza' };
+    else if (forma === 'mesa' || forma === 'rack' || forma === 'armario') cfgEfetivo = { texturaId: 'mov_freijo' };
+    else if (forma === 'geladeira') cfgEfetivo = { texturaId: 'mov_inox' };
+    else if (forma === 'bancada') cfgEfetivo = { texturaId: 'mov_marmore_bancada' };
+  }
+  const matCor = cfgEfetivo
+    ? criarMaterialComTextura(cfgEfetivo, movel.cor || '#8a5a3b', roughBase, metalBase)
+    : new THREE.MeshStandardMaterial({
+        color: movel.cor || '#8a5a3b',
+        roughness: roughBase,
+        metalness: metalBase,
+      });
   matCor.userData.proprio = true;
   const add = (bw, bh, bd, px, py, pz, mat = matCor, cast = true) => caixa(g, bw, bh, bd, px, py, pz, mat, cast);
 
@@ -221,6 +311,7 @@ export function construirCasa(casa) {
   let selecionaveisMoveis = [];
   let centroDosComodos = {};
   let ultimoFiltroVisibilidade = {};
+  let modoRealistaAtual = false;
 
   function comodosDaAbertura(a, rooms) {
     const ids = new Set();
@@ -256,15 +347,67 @@ export function construirCasa(casa) {
     centroDosComodos = {};
 
     const env = modelo.envelope;
+    const matsUsuario = modelo.materiais || {};
+
+    // Mapa de materiais de parede por cômodo (usado quando há textura personalizada ou modo realista)
+    const matParedePorComodo = new Map();
+    for (const room of modelo.rooms) {
+      const cfgParede = matsUsuario[`parede:${room.id}`] || (modoRealistaAtual ? { texturaId: texturaPadraoParedeComodo(room) } : null);
+      if (cfgParede) {
+        matParedePorComodo.set(room.id, criarMaterialComTextura(cfgParede, 0xf3f0ea, 0.86, 0.02));
+      }
+    }
+
+    const materialDaParede = (b, baseMat) => {
+      if (matParedePorComodo.size === 0) return baseMat;
+      const ids = b.comodos?.length ? b.comodos : comodosDaAbertura(b, modelo.rooms);
+      if (!ids.length) return baseMat;
+      if (b.eixo === 'd') {
+        return matParedePorComodo.get(ids[0]) || baseMat;
+      }
+      // Para paredes compartilhadas ou externas, aplica a textura de cada cômodo apenas na face voltada para dentro dele!
+      // Índices BoxGeometry: 0:+X, 1:-X, 2:+Y, 3:-Y, 4:+Z, 5:-Z
+      const faces = [baseMat, baseMat, baseMat, baseMat, baseMat, baseMat];
+      let mudou = false;
+      for (const id of ids) {
+        const mp = matParedePorComodo.get(id);
+        if (!mp) continue;
+        const r = modelo.rooms.find((x) => x.id === id);
+        if (!r) continue;
+        if (b.eixo === 'v') {
+          if (r.x >= b.coord - 0.18) {
+            faces[0] = mp; // face +X voltada para o cômodo à direita
+            mudou = true;
+          }
+          if (r.x + r.w <= b.coord + 0.18) {
+            faces[1] = mp; // face -X voltada para o cômodo à esquerda
+            mudou = true;
+          }
+        } else {
+          if (r.z >= b.coord - 0.18) {
+            faces[4] = mp; // face +Z voltada para o cômodo à frente
+            mudou = true;
+          }
+          if (r.z + r.d <= b.coord + 0.18) {
+            faces[5] = mp; // face -Z voltada para o cômodo ao fundo
+            mudou = true;
+          }
+        }
+      }
+      return mudou ? faces : baseMat;
+    };
 
     // ---- Pisos por cômodo ----
     for (const room of modelo.rooms) {
       const piso = PISOS[room.piso] || PISOS.nao_definido;
-      const materialPiso = new THREE.MeshStandardMaterial({
-        color: piso.cor,
-        roughness: piso.aspereza,
-        metalness: 0.02,
-      });
+      const cfgPiso = matsUsuario[`piso:${room.id}`] || (modoRealistaAtual ? { texturaId: texturaPadraoPisoComodo(room) } : null);
+      const materialPiso = cfgPiso
+        ? criarMaterialComTextura(cfgPiso, piso.cor, piso.aspereza, 0.04)
+        : new THREE.MeshStandardMaterial({
+            color: piso.cor,
+            roughness: piso.aspereza,
+            metalness: 0.02,
+          });
       materialPiso.userData.proprio = true;
       const poly = poligonoComodo(room);
       let malha;
@@ -296,7 +439,8 @@ export function construirCasa(casa) {
     for (const b of blocos) {
       const altura = b.yTopo - b.yBase;
       if (altura <= 0.02) continue;
-      const material = b.externa ? MAT.externa : b.tipo === 'parede' ? MAT.interna : MAT.verga;
+      const matBase = b.externa ? MAT.externa : b.tipo === 'parede' ? MAT.interna : MAT.verga;
+      const material = materialDaParede(b, matBase);
       const destino = b.externa ? grupoExterior : grupoInterior;
       let malha;
       if (b.eixo === 'd') {
@@ -467,10 +611,12 @@ export function construirCasa(casa) {
     selecionaveisMoveis = [];
     const porId = new Map(modelo.rooms.map((r) => [r.id, r]));
     const lista = Array.isArray(modelo.moveis) ? modelo.moveis : [];
+    const matsUsuario = modelo.materiais || {};
     for (const movel of lista) {
       const room = porId.get(movel.comodoId);
       if (!room) continue;
-      const g = criarMovel3D(movel, room);
+      const matCfg = matsUsuario[`movel:${movel.id}`] || null;
+      const g = criarMovel3D(movel, room, matCfg, modoRealistaAtual);
       grupoMobilia.add(g);
       g.traverse((obj) => {
         if (obj.isMesh) selecionaveisMoveis.push(obj);
@@ -479,6 +625,13 @@ export function construirCasa(casa) {
     if (ultimoFiltroVisibilidade && Object.keys(ultimoFiltroVisibilidade).length) {
       definirVisibilidade(ultimoFiltroVisibilidade);
     }
+  }
+
+  function definirModoRealista(ativo) {
+    const novo = Boolean(ativo);
+    if (novo === modoRealistaAtual) return;
+    modoRealistaAtual = novo;
+    reconstruir(modeloAtual);
   }
 
   function destacarMovel(movelId) {
@@ -611,6 +764,7 @@ export function construirCasa(casa) {
     raiz,
     reconstruir,
     reconstruirMoveis,
+    definirModoRealista,
     destacar,
     destacarMovel,
     definirVisibilidade,

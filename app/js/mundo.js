@@ -57,6 +57,10 @@ export function criarMundo({ obterEstado, obterCasa, aoSelecionarModulo, aoSelec
   const hemi = new THREE.HemisphereLight(0xaad4ff, 0x2a3126, 0.55);
   scene.add(hemi);
 
+  const luzInterna = new THREE.PointLight(0xffe1b5, 0, 14, 1.35);
+  luzInterna.position.set(0.7, 2.45, -2.0);
+  scene.add(luzInterna);
+
   const sol = new THREE.DirectionalLight(0xfff5dc, 2.3);
   sol.castShadow = true;
   sol.shadow.mapSize.set(2048, 2048);
@@ -645,6 +649,21 @@ export function criarMundo({ obterEstado, obterCasa, aoSelecionarModulo, aoSelec
     irPara(alvo.clone().add(desloc), alvo);
   }
 
+  /** Câmera cinematográfica na altura dos olhos (1,55 m) em um canto do cômodo. */
+  function focarDentroComodo(id) {
+    const room = obterCasa().rooms.find((r) => r.id === id);
+    if (!room) return;
+    lote.updateMatrixWorld(true);
+    const olho = localParaMundo(room.x + Math.min(0.45, room.w * 0.2), 1.55, room.z + room.d - Math.min(0.45, room.d * 0.2));
+    const alvo = localParaMundo(room.x + room.w * 0.62, 1.15, room.z + room.d * 0.35);
+    irPara(olho, alvo);
+  }
+
+  function capturarRenderDataUrl() {
+    renderer.render(scene, camera);
+    return canvas.toDataURL('image/png');
+  }
+
   // ---------- Raycast de clique ----------
   const ponteiro = new THREE.Vector2();
   function normalizarPonteiro(clientX, clientY) {
@@ -688,7 +707,7 @@ export function criarMundo({ obterEstado, obterCasa, aoSelecionarModulo, aoSelec
     if (estadoAtual.aba === 'casa3d') {
       const id = pickModulo(e.clientX, e.clientY);
       if (id) aoSelecionarModulo?.(id);
-    } else if (estadoAtual.aba === 'moveis' || estadoAtual.aba === 'interiores') {
+    } else if (estadoAtual.aba === 'moveis' || estadoAtual.aba === 'interiores' || estadoAtual.aba === 'render') {
       const movId = pickMovel(e.clientX, e.clientY);
       if (movId) aoSelecionarMovel?.(movId);
     }
@@ -701,32 +720,36 @@ export function criarMundo({ obterEstado, obterCasa, aoSelecionarModulo, aoSelec
   function atualizarTudo() {
     const estado = obterEstado();
     const casa = obterCasa();
-    const vistaInterior = estado.aba === 'interiores' || estado.aba === 'moveis';
+    const emRender = estado.aba === 'render';
+    const realista = emRender || Boolean(estado.renderRealista);
+    const vistaInterior = estado.aba === 'interiores' || estado.aba === 'moveis' || emRender;
     const isolando = vistaInterior && Boolean(estado.isolarComodo) && Boolean(estado.comodoSelecionado);
+
+    casa3d.definirModoRealista(realista);
 
     lote.rotation.y = -THREE.MathUtils.degToRad(estado.lotAzimuth ?? AZIMUTE_PADRAO);
     lote.updateMatrixWorld(true);
     planoSatelite.visible = !isolando && estado.satelite !== false;
     grupoEntorno.visible = !isolando;
-    rosa.visible = !isolando;
+    rosa.visible = !isolando && !emRender;
 
     // Telhado e interior (na Casa 3D, quando Raio-X remove o telhado, todos os móveis aparecem!)
     const mostrarInterior = vistaInterior || estado.raioX;
     grupoTelhado.visible = !mostrarInterior;
     casa3d.definirVisibilidade({
       interior: mostrarInterior,
-      mobilia: mostrarInterior && (estado.aba === 'moveis' || estado.mobilia !== false),
-      etiquetas: mostrarInterior && estado.etiquetas !== false && estado.modo !== 'passeio',
+      mobilia: mostrarInterior && (estado.aba === 'moveis' || emRender || estado.mobilia !== false),
+      etiquetas: mostrarInterior && !emRender && estado.etiquetas !== false && estado.modo !== 'passeio',
       selecionado: estado.comodoSelecionado,
       isolar: isolando,
       paredes: vistaInterior ? estado.modoParedes || 'inteiras' : 'inteiras',
     });
-    const destaque = mostrarInterior ? estado.comodoSelecionado : null;
+    const destaque = mostrarInterior && !emRender ? estado.comodoSelecionado : null;
     if (destaque !== destaqueAtual) {
       casa3d.destacar(destaque);
       destaqueAtual = destaque;
     }
-    casa3d.destacarMovel(estado.aba === 'moveis' ? estado.movelSelecionado : null);
+    casa3d.destacarMovel(estado.aba === 'moveis' || emRender ? estado.movelSelecionado : null);
 
     // Cobertura dos fundos (encostada no muro direito Machado de Assis -> queda p/ esquerda Visconde de Taunay)
     if (isolando || estado.coberturaFundos === 'nenhuma') {
@@ -759,16 +782,61 @@ export function criarMundo({ obterEstado, obterCasa, aoSelecionarModulo, aoSelec
     sol.position.set(vetor.x, vetor.y, vetor.z);
     esferaSol.position.set(vetor.x * 0.94, vetor.y * 0.94, vetor.z * 0.94);
     const diaClaro = pos.altitudeDeg > 0;
-    sol.intensity = diaClaro ? Math.min(2.6, 0.7 + Math.sin(pos.altitudeRad) * 2.2) : 0.05;
-    esferaSol.visible = diaClaro;
-    hemi.intensity = diaClaro ? 0.58 : 0.16;
-    if (!diaClaro) scene.background.setHex(0x060b14);
-    else if (pos.altitudeDeg < 14) {
-      scene.background.setHex(0x1f1b2e);
-      sol.color.setHex(0xffb36b);
+    const luzRender = estado.luzRender || 'dia';
+    const centroLuz = casa3d.centroDoComodo(estado.comodoSelecionado);
+    if (centroLuz) {
+      luzInterna.position.copy(localParaMundo(centroLuz.x, 2.45, centroLuz.z));
+    }
+
+    if (realista) {
+      if (luzRender === 'noite') {
+        scene.background.setHex(0x0c1726);
+        scene.fog.color.setHex(0x0c1726);
+        sol.intensity = 0.12;
+        esferaSol.visible = false;
+        hemi.intensity = 0.42;
+        luzInterna.color.setHex(0xffd79e);
+        luzInterna.intensity = 10.5;
+        renderer.toneMappingExposure = 1.18;
+      } else if (luzRender === 'tarde') {
+        scene.background.setHex(0x4a3444);
+        scene.fog.color.setHex(0x4a3444);
+        sol.color.setHex(0xffb56b);
+        sol.intensity = 2.4;
+        esferaSol.visible = diaClaro;
+        hemi.intensity = 0.72;
+        luzInterna.color.setHex(0xffe0b2);
+        luzInterna.intensity = 4.5;
+        renderer.toneMappingExposure = 1.15;
+      } else {
+        scene.background.setHex(0x5289b8);
+        scene.fog.color.setHex(0x5289b8);
+        sol.color.setHex(0xfffaf0);
+        sol.intensity = diaClaro ? 2.65 : 1.1;
+        esferaSol.visible = diaClaro;
+        hemi.intensity = 0.95;
+        luzInterna.color.setHex(0xfff4e0);
+        luzInterna.intensity = 2.2;
+        renderer.toneMappingExposure = 1.14;
+      }
     } else {
-      scene.background.setHex(0x0e1d30);
-      sol.color.setHex(0xfff6e0);
+      luzInterna.intensity = 0;
+      renderer.toneMappingExposure = 1.05;
+      sol.intensity = diaClaro ? Math.min(2.6, 0.7 + Math.sin(pos.altitudeRad) * 2.2) : 0.05;
+      esferaSol.visible = diaClaro;
+      hemi.intensity = diaClaro ? 0.58 : 0.16;
+      if (!diaClaro) {
+        scene.background.setHex(0x060b14);
+        scene.fog.color.setHex(0x060b14);
+      } else if (pos.altitudeDeg < 14) {
+        scene.background.setHex(0x1f1b2e);
+        scene.fog.color.setHex(0x1f1b2e);
+        sol.color.setHex(0xffb36b);
+      } else {
+        scene.background.setHex(0x0e1d30);
+        scene.fog.color.setHex(0x0e1d30);
+        sol.color.setHex(0xfff6e0);
+      }
     }
 
     curvaAtual = getDaySolarCurve(ano || 2026, mes || 6, dia || 21, estado.lat, estado.lng);
@@ -858,6 +926,8 @@ export function criarMundo({ obterEstado, obterCasa, aoSelecionarModulo, aoSelec
     diagnosticarComodo,
     aplicarPreset,
     focarComodo,
+    focarDentroComodo,
+    capturarRenderDataUrl,
     localParaMundo,
     mundoParaLocal,
     pickModulo,
