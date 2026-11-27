@@ -28,6 +28,8 @@ export function iniciarInteriores(ctx) {
   const elDpad = document.getElementById('dpad');
   const elPasseio = document.getElementById('passeioAjuda');
   const elBtnEditar = document.getElementById('btnPlantaEditar');
+  const elBtnIsolar = document.getElementById('btnIsolarComodo');
+  const elBtnIsolarHud = document.getElementById('btnIsolarComodoHud');
   const canvas3d = document.getElementById('canvas3d');
 
   // Planta de fundo (imagem da planta real por baixo dos cômodos)
@@ -52,7 +54,7 @@ export function iniciarInteriores(ctx) {
   let calibrandoFundo = false;
   let pontosCalibragem = [];
 
-  let transform = { esc: 40, ox: 0, oy: 0, w: 0, h: 0 };
+  let transform = { esc: 40, ox: 0, oy: 0, w: 0, h: 0, x0: 0, z0: 0 };
   let arrasto = null;
   let emPasseio = false;
   let olhando = false;
@@ -313,6 +315,7 @@ export function iniciarInteriores(ctx) {
     salvar();
     renderLista();
     renderEditor();
+    ctx.atualizarTudo();
     atualizarSol();
     desenharPlanta();
     if (focar && estado.modo === '3d') mundo.focarComodo(id);
@@ -639,10 +642,10 @@ export function iniciarInteriores(ctx) {
     return true;
   }
 
-  const paraTelaX = (x) => transform.ox + (x - casa.envelope.x0) * transform.esc;
-  const paraTelaY = (z) => transform.oy + (z - casa.envelope.z0) * transform.esc;
-  const paraLocalX = (px) => casa.envelope.x0 + (px - transform.ox) / transform.esc;
-  const paraLocalZ = (py) => casa.envelope.z0 + (py - transform.oy) / transform.esc;
+  const paraTelaX = (x) => transform.ox + (x - transform.x0) * transform.esc;
+  const paraTelaY = (z) => transform.oy + (z - transform.z0) * transform.esc;
+  const paraLocalX = (px) => transform.x0 + (px - transform.ox) / transform.esc;
+  const paraLocalZ = (py) => transform.z0 + (py - transform.oy) / transform.esc;
 
   function desenharPlanta() {
     if (estado.modo !== 'planta' || !transform.w) return;
@@ -650,12 +653,21 @@ export function iniciarInteriores(ctx) {
     const w = transform.w;
     const h = transform.h;
     const env = casa.envelope;
-    const margemX = 46;
-    const margemY = 42;
-    const largura = env.x1 - env.x0;
-    const profundidade = env.z1 - env.z0;
+    const rSel = comodo();
+    const isolado = Boolean(estado.isolarComodo && rSel);
+    const margemX = 52;
+    const margemY = 48;
+
+    const minX = isolado ? rSel.x - 0.65 : env.x0;
+    const maxX = isolado ? rSel.x + rSel.w + 0.65 : env.x1;
+    const minZ = isolado ? rSel.z - 0.65 : env.z0;
+    const maxZ = isolado ? rSel.z + rSel.d + 0.65 : env.z1;
+    const largura = maxX - minX;
+    const profundidade = maxZ - minZ;
     const esc = Math.max(4, Math.min((w - margemX * 2) / largura, (h - margemY * 2) / profundidade));
     transform.esc = esc;
+    transform.x0 = minX;
+    transform.z0 = minZ;
     transform.ox = margemX + ((w - margemX * 2) - largura * esc) / 2;
     transform.oy = margemY + ((h - margemY * 2) - profundidade * esc) / 2;
 
@@ -663,34 +675,39 @@ export function iniciarInteriores(ctx) {
     g.fillStyle = '#08111a';
     g.fillRect(0, 0, w, h);
 
-    // Grade de 1 m
-    g.strokeStyle = 'rgba(255,255,255,0.045)';
+    // Grade (0,5 m quando isolado para facilitar layout de móveis; 1 m na casa toda)
+    const passoGrade = isolado ? 0.5 : 1;
+    g.strokeStyle = isolado ? 'rgba(255,255,255,0.065)' : 'rgba(255,255,255,0.045)';
     g.lineWidth = 1;
-    for (let x = Math.ceil(env.x0); x <= env.x1; x++) {
+    for (let x = Math.ceil(minX / passoGrade) * passoGrade; x <= maxX; x += passoGrade) {
       g.beginPath();
-      g.moveTo(paraTelaX(x), paraTelaY(env.z0));
-      g.lineTo(paraTelaX(x), paraTelaY(env.z1));
+      g.moveTo(paraTelaX(x), paraTelaY(minZ));
+      g.lineTo(paraTelaX(x), paraTelaY(maxZ));
       g.stroke();
     }
-    for (let z = Math.ceil(env.z0); z <= env.z1; z++) {
+    for (let z = Math.ceil(minZ / passoGrade) * passoGrade; z <= maxZ; z += passoGrade) {
       g.beginPath();
-      g.moveTo(paraTelaX(env.x0), paraTelaY(z));
-      g.lineTo(paraTelaX(env.x1), paraTelaY(z));
+      g.moveTo(paraTelaX(minX), paraTelaY(z));
+      g.lineTo(paraTelaX(maxX), paraTelaY(z));
       g.stroke();
     }
 
-    // Envelope
-    g.fillStyle = '#0d1823';
-    g.fillRect(paraTelaX(env.x0), paraTelaY(env.z0), largura * esc, profundidade * esc);
-    g.strokeStyle = '#31465c';
-    g.lineWidth = 1;
-    g.strokeRect(paraTelaX(env.x0), paraTelaY(env.z0), largura * esc, profundidade * esc);
+    // Envelope (só na vista da casa toda)
+    if (!isolado) {
+      g.fillStyle = '#0d1823';
+      g.fillRect(paraTelaX(env.x0), paraTelaY(env.z0), (env.x1 - env.x0) * esc, (env.z1 - env.z0) * esc);
+      g.strokeStyle = '#31465c';
+      g.lineWidth = 1;
+      g.strokeRect(paraTelaX(env.x0), paraTelaY(env.z0), (env.x1 - env.x0) * esc, (env.z1 - env.z0) * esc);
+    }
+
+    const roomsVisiveis = isolado ? [rSel] : casa.rooms;
 
     // Pisos (suporta cômodos retangulares e pentagonais com chanfro)
-    for (const r of casa.rooms) {
+    for (const r of roomsVisiveis) {
       const sel = r.id === estado.comodoSelecionado;
       const poly = poligonoComodo(r);
-      g.fillStyle = hexComAlfa(r.cor, sel ? 0.34 : 0.15);
+      g.fillStyle = hexComAlfa(r.cor, sel ? 0.3 : 0.15);
       g.strokeStyle = sel ? '#ffffff' : hexComAlfa(r.cor, 0.55);
       g.lineWidth = sel ? 2.4 : 1.2;
       g.beginPath();
@@ -703,14 +720,14 @@ export function iniciarInteriores(ctx) {
       g.stroke();
     }
 
-    // Imagem da planta real: por cima do piso, por baixo das paredes,
-    // para servir de guia ao arrastar os cômodos.
-    desenharFundo(g);
+    // Imagem da planta real: por cima do piso, por baixo das paredes
+    if (!isolado) desenharFundo(g);
 
-    // Paredes (os vãos de porta e janela aparecem naturalmente)
+    // Paredes (filtra só as paredes do cômodo quando isolado)
     for (const b of redeDeParedes(casa)) {
       if (b.tipo !== 'parede') continue;
-      g.fillStyle = b.externa ? 'rgba(226,221,213,0.92)' : 'rgba(243,240,234,0.8)';
+      if (isolado && !(Array.isArray(b.comodos) && b.comodos.includes(rSel.id))) continue;
+      g.fillStyle = b.externa ? 'rgba(226,221,213,0.92)' : 'rgba(243,240,234,0.85)';
       if (b.eixo === 'd') {
         g.strokeStyle = g.fillStyle;
         g.lineWidth = Math.max(2, b.espessura * esc);
@@ -726,7 +743,18 @@ export function iniciarInteriores(ctx) {
     }
 
     // Portas e janelas
+    const aberturaDoIsolado = (a) => {
+      if (!isolado) return true;
+      if (a.comodo === rSel.id) return true;
+      const tol = 0.22;
+      if (a.eixo === 'd') return false;
+      if (a.eixo === 'h') {
+        return (Math.abs(a.coord - rSel.z) <= tol || Math.abs(a.coord - (rSel.z + rSel.d)) <= tol) && a.fim > rSel.x + 0.02 && a.ini < rSel.x + rSel.w - 0.02;
+      }
+      return (Math.abs(a.coord - rSel.x) <= tol || Math.abs(a.coord - (rSel.x + rSel.w)) <= tol) && a.fim > rSel.z + 0.02 && a.ini < rSel.z + rSel.d - 0.02;
+    };
     for (const a of aberturasVisiveis(casa)) {
+      if (!aberturaDoIsolado(a)) continue;
       if (a.eixo === 'd') {
         const x1 = paraTelaX(a.x1);
         const y1 = paraTelaY(a.z1);
@@ -782,7 +810,7 @@ export function iniciarInteriores(ctx) {
     }
 
     // Detalhes estruturais em concreto: guarda-roupas embutidos e extensão em L do banheiro da suíte
-    for (const r of casa.rooms) {
+    for (const r of roomsVisiveis) {
       if (r.id === 'quarto2') {
         const prof = 0.65;
         const largL = 0.85;
@@ -824,7 +852,7 @@ export function iniciarInteriores(ctx) {
     }
 
     // Nomes e medidas
-    for (const r of casa.rooms) {
+    for (const r of roomsVisiveis) {
       const cx = paraTelaX(r.x + r.w / 2);
       const cy = paraTelaY(r.z + r.d / 2);
       const larguraPx = r.w * esc;
@@ -1058,8 +1086,44 @@ export function iniciarInteriores(ctx) {
   elPlanta.addEventListener('pointercancel', terminarArrasto);
 
   // ============================ MODOS ============================
+  function sincronizarBotaoIsolar() {
+    const ativo = Boolean(estado.isolarComodo);
+    if (elBtnIsolar) {
+      elBtnIsolar.classList.toggle('ativo', ativo);
+      elBtnIsolar.textContent = ativo ? '✓ Vendo só este cômodo (mostrar todos)' : '🔍 Ver só este cômodo';
+    }
+    if (elBtnIsolarHud) {
+      elBtnIsolarHud.classList.toggle('ativo', ativo);
+      elBtnIsolarHud.textContent = ativo ? '✓ Só este cômodo' : '🔍 Só este cômodo';
+    }
+  }
+
+  function alternarIsolarComodo() {
+    estado.isolarComodo = !estado.isolarComodo;
+    if (estado.isolarComodo && estado.modo === 'passeio') {
+      estado.modo = '3d';
+    }
+    sincronizarBotaoIsolar();
+    salvar();
+    aplicarModo();
+    ctx.atualizarTudo();
+    if (estado.isolarComodo && estado.comodoSelecionado && estado.modo === '3d') {
+      mundo.focarComodo(estado.comodoSelecionado);
+    }
+    const r = comodo();
+    toast(
+      estado.isolarComodo && r
+        ? `Isolando: ${r.nome}. Clique em outro cômodo na lista para alternar.`
+        : 'Mostrando a casa inteira.'
+    );
+  }
+
+  elBtnIsolar?.addEventListener('click', alternarIsolarComodo);
+  elBtnIsolarHud?.addEventListener('click', alternarIsolarComodo);
+
   function aplicarModo() {
     const modo = estado.modo || '3d';
+    sincronizarBotaoIsolar();
     document.querySelectorAll('[data-modo]').forEach((b) => b.classList.toggle('ativo', b.dataset.modo === modo));
     elPlanta.hidden = modo !== 'planta';
     elDpad.hidden = modo !== 'passeio';
@@ -1109,12 +1173,18 @@ export function iniciarInteriores(ctx) {
   });
 
   document.getElementById('btnFocarCasa').addEventListener('click', () => {
+    if (estado.isolarComodo) {
+      estado.isolarComodo = false;
+      sincronizarBotaoIsolar();
+      salvar();
+    }
     if (estado.modo === 'passeio') {
       estado.modo = '3d';
       salvar();
       aplicarModo();
-      ctx.atualizarTudo();
     }
+    ctx.atualizarTudo();
+    desenharPlanta();
     mundo.aplicarPreset('casa');
   });
 

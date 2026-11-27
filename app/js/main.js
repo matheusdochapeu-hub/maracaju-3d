@@ -63,6 +63,7 @@ function estadoPadrao() {
     etiquetas: true,
     moduloSelecionado: 'horta_15m',
     comodoSelecionado: 'sala',
+    isolarComodo: false,
     areaCamera: 'sala',
     plantaEditar: false,
     modulos: modulosPadrao(),

@@ -152,6 +152,28 @@ export function construirCasa(casa) {
   let occluders = [];
   let centroDosComodos = {};
 
+  function comodosDaAbertura(a, rooms) {
+    const ids = new Set();
+    if (a.comodo) ids.add(a.comodo);
+    const tol = 0.22;
+    for (const r of rooms) {
+      if (a.eixo === 'd') {
+        const mx = (a.x1 + a.x2) / 2;
+        const mz = (a.z1 + a.z2) / 2;
+        if (mx >= r.x - tol && mx <= r.x + r.w + tol && mz >= r.z - tol && mz <= r.z + r.d + tol) ids.add(r.id);
+      } else if (a.eixo === 'h') {
+        const tocaZ = Math.abs(a.coord - r.z) <= tol || Math.abs(a.coord - (r.z + r.d)) <= tol;
+        const sobrepoeX = a.fim > r.x + 0.02 && a.ini < r.x + r.w - 0.02;
+        if (tocaZ && sobrepoeX) ids.add(r.id);
+      } else {
+        const tocaX = Math.abs(a.coord - r.x) <= tol || Math.abs(a.coord - (r.x + r.w)) <= tol;
+        const sobrepoeZ = a.fim > r.z + 0.02 && a.ini < r.z + r.d - 0.02;
+        if (tocaX && sobrepoeZ) ids.add(r.id);
+      }
+    }
+    return [...ids];
+  }
+
   function reconstruir(modelo) {
     modeloAtual = modelo;
     limparGrupo(grupoExterior);
@@ -194,6 +216,7 @@ export function construirCasa(casa) {
         malha = caixa(grupoInterior, room.w, 0.04, room.d, room.x + room.w / 2, 0.02, room.z + room.d / 2, materialPiso, false);
         malha.receiveShadow = true;
       }
+      malha.userData.comodos = [room.id];
       centroDosComodos[room.id] = { x: room.x + room.w / 2, z: room.z + room.d / 2 };
     }
 
@@ -234,6 +257,7 @@ export function construirCasa(casa) {
           }
         }
       }
+      malha.userData.comodos = b.comodos?.length ? b.comodos : comodosDaAbertura(b, modelo.rooms);
       occluders.push(malha);
     }
 
@@ -246,12 +270,14 @@ export function construirCasa(casa) {
       const alt = a.altura;
       const peitoril = a.peitoril;
       const yCentro = peitoril + alt / 2;
+      const comodosAbertura = comodosDaAbertura(a, modelo.rooms);
 
       if (a.eixo === 'd') {
         const rotY = -Math.atan2(a.z2 - a.z1, a.x2 - a.x1);
         const grupoDiag = new THREE.Group();
         grupoDiag.position.set((a.x1 + a.x2) / 2, 0, (a.z1 + a.z2) / 2);
         grupoDiag.rotation.y = rotY;
+        grupoDiag.userData.comodos = comodosAbertura;
         caixa(grupoDiag, 0.05, alt, esp + 0.04, -larg / 2 + 0.025, yCentro, 0, barra);
         caixa(grupoDiag, 0.05, alt, esp + 0.04, larg / 2 - 0.025, yCentro, 0, barra);
         caixa(grupoDiag, larg, 0.05, esp + 0.04, 0, peitoril + alt - 0.025, 0, barra);
@@ -260,9 +286,11 @@ export function construirCasa(casa) {
       }
 
       const hHorizontal = a.eixo === 'h';
+      const grupoAb = new THREE.Group();
+      grupoAb.userData.comodos = comodosAbertura;
       const criarBarra = (bw, bh, bd, dx, dy, dz) => {
-        if (hHorizontal) caixa(grupoExterior, bw, bh, bd, a.ini + larg / 2 + dx, dy, a.coord + dz, barra);
-        else caixa(grupoExterior, bd, bh, bw, a.coord + dz, dy, a.ini + larg / 2 + dx, barra);
+        if (hHorizontal) caixa(grupoAb, bw, bh, bd, a.ini + larg / 2 + dx, dy, a.coord + dz, barra);
+        else caixa(grupoAb, bd, bh, bw, a.coord + dz, dy, a.ini + larg / 2 + dx, barra);
       };
       // montantes laterais
       criarBarra(0.05, alt, esp + 0.04, -larg / 2 + 0.025, yCentro, 0);
@@ -277,8 +305,9 @@ export function construirCasa(casa) {
         );
         vidro.position.set(hHorizontal ? a.ini + larg / 2 : a.coord, yCentro, hHorizontal ? a.coord : a.ini + larg / 2);
         vidro.renderOrder = 2;
-        grupoExterior.add(vidro);
+        grupoAb.add(vidro);
       }
+      grupoExterior.add(grupoAb);
     }
 
     // ---- Alvenaria / concreto embutido (guarda-roupas de concreto e banheiro da suíte em L) ----
@@ -290,53 +319,60 @@ export function construirCasa(casa) {
         const largL = 0.85;
         const zFrente = room.z + room.d; // parede com banheiro2
         const zFace = zFrente - prof; // face frontal alinhada do L + guarda-roupa de concreto
-        // Piso cerâmico do banheiro continuando dentro do L
+        const grupoL = new THREE.Group();
+        grupoL.userData.comodos = ['quarto2', 'banheiro2'];
         const matPisoBanho = new THREE.MeshStandardMaterial({ color: PISOS.ceramica.cor, roughness: 0.5 });
         matPisoBanho.userData.proprio = true;
-        caixa(grupoInterior, largL, 0.045, prof, room.x + largL / 2, 0.025, zFrente - prof / 2, matPisoBanho, false);
+        caixa(grupoL, largL, 0.045, prof, room.x + largL / 2, 0.025, zFrente - prof / 2, matPisoBanho, false);
 
-        // Parede lateral de concreto separando o L do guarda-roupa embutido (x = room.x + largL)
-        const divL = caixa(grupoInterior, 0.12, alt, prof, room.x + largL, alt / 2, zFrente - prof / 2, MAT.interna);
+        const divL = caixa(grupoL, 0.12, alt, prof, room.x + largL, alt / 2, zFrente - prof / 2, MAT.interna);
         occluders.push(divL);
-        // Verga de concreto + batente da porta do banheiro da suíte na face frontal do L (próxima à janela!)
         const altPorta = 2.1;
         if (alt > altPorta + 0.05) {
-          const vergaL = caixa(grupoInterior, largL, alt - altPorta, 0.12, room.x + largL / 2, (altPorta + alt) / 2, zFace, MAT.interna);
+          const vergaL = caixa(grupoL, largL, alt - altPorta, 0.12, room.x + largL / 2, (altPorta + alt) / 2, zFace, MAT.interna);
           occluders.push(vergaL);
         }
         const largPorta = 0.72;
         const xPortaCentro = room.x + largL / 2;
-        caixa(grupoInterior, 0.05, altPorta, 0.14, xPortaCentro - largPorta / 2 + 0.025, altPorta / 2, zFace, MAT.batente);
-        caixa(grupoInterior, 0.05, altPorta, 0.14, xPortaCentro + largPorta / 2 - 0.025, altPorta / 2, zFace, MAT.batente);
-        caixa(grupoInterior, largPorta, 0.05, 0.14, xPortaCentro, altPorta - 0.025, zFace, MAT.batente);
+        caixa(grupoL, 0.05, altPorta, 0.14, xPortaCentro - largPorta / 2 + 0.025, altPorta / 2, zFace, MAT.batente);
+        caixa(grupoL, 0.05, altPorta, 0.14, xPortaCentro + largPorta / 2 - 0.025, altPorta / 2, zFace, MAT.batente);
+        caixa(grupoL, largPorta, 0.05, 0.14, xPortaCentro, altPorta - 0.025, zFace, MAT.batente);
+        grupoInterior.add(grupoL);
 
         // Guarda-roupa de CONCRETO embutido na parede (logo ao lado do L, até o início da porta do corredor interno)
         const xIniGR = room.x + largL + 0.06;
         const largGR = Math.max(0.8, Math.min(1.52, room.w - largL - 1.15));
         const xCentroGR = xIniGR + largGR / 2;
-        // Estrutura em concreto/alvenaria até o teto
-        const grConcreto = caixa(grupoInterior, largGR, alt, prof, xCentroGR, alt / 2, zFrente - prof / 2, MAT.interna);
+        const grupoGR2 = new THREE.Group();
+        grupoGR2.userData.comodos = ['quarto2'];
+        const grConcreto = caixa(grupoGR2, largGR, alt, prof, xCentroGR, alt / 2, zFrente - prof / 2, MAT.interna);
         occluders.push(grConcreto);
         colisores.push({ x0: xIniGR, x1: xIniGR + largGR, z0: zFace, z1: zFrente });
-        // Portas frontais em madeira embutidas no nicho de concreto (com testeira/maleiro de concreto acima)
-        caixa(grupoInterior, largGR - 0.14, 2.05, 0.04, xCentroGR, 1.05, zFace - 0.01, MAT.madeira);
+        caixa(grupoGR2, largGR - 0.14, 2.05, 0.04, xCentroGR, 1.05, zFace - 0.01, MAT.madeira);
+        grupoInterior.add(grupoGR2);
       } else if (room.id === 'quarto1') {
-        // Guarda-roupa de CONCRETO embutido na parede do fundo do Quarto da frente (Escritório)
         const prof = 0.65;
         const largGR = Math.max(0.8, Math.min(1.65, room.w - 1.25));
         const xCentroGR = room.x + largGR / 2 + 0.04;
         const zCentroGR = room.z + prof / 2;
-        const grConcreto = caixa(grupoInterior, largGR, alt, prof, xCentroGR, alt / 2, zCentroGR, MAT.interna);
+        const grupoGR1 = new THREE.Group();
+        grupoGR1.userData.comodos = ['quarto1'];
+        const grConcreto = caixa(grupoGR1, largGR, alt, prof, xCentroGR, alt / 2, zCentroGR, MAT.interna);
         occluders.push(grConcreto);
         colisores.push({ x0: room.x + 0.04, x1: room.x + 0.04 + largGR, z0: room.z, z1: room.z + prof });
-        // Portas frontais em madeira embutidas no concreto (voltadas para dentro do escritório)
-        caixa(grupoInterior, largGR - 0.14, 2.05, 0.04, xCentroGR, 1.05, room.z + prof + 0.01, MAT.madeira);
+        caixa(grupoGR1, largGR - 0.14, 2.05, 0.04, xCentroGR, 1.05, room.z + prof + 0.01, MAT.madeira);
+        grupoInterior.add(grupoGR1);
       }
     }
 
     // ---- Móveis e etiquetas ----
     for (const room of modelo.rooms) {
-      if (room.mobilia !== false) moveisDoComodo(room, grupoMobilia);
+      if (room.mobilia !== false) {
+        const grupoMobComodo = new THREE.Group();
+        grupoMobComodo.userData.comodos = [room.id];
+        moveisDoComodo(room, grupoMobComodo);
+        grupoMobilia.add(grupoMobComodo);
+      }
       const etiqueta = criarEtiqueta(room.nome, `${areaComodo(room).toFixed(1).replace('.', ',')} m²`, room.cor);
       etiqueta.position.set(room.x + room.w / 2, env.peDireito + 0.25, room.z + room.d / 2);
       etiqueta.userData.comodoId = room.id;
@@ -385,10 +421,26 @@ export function construirCasa(casa) {
     grupoDestaque.add(linha);
   }
 
-  function definirVisibilidade({ interior = true, mobilia = true, etiquetas = true, selecionado = null } = {}) {
+  function definirVisibilidade({ interior = true, mobilia = true, etiquetas = true, selecionado = null, isolar = false } = {}) {
+    const isolado = isolar && selecionado ? selecionado : null;
+    const filtrar = (grupo) => {
+      for (const filho of grupo.children) {
+        if (!isolado) {
+          filho.visible = true;
+        } else {
+          const lista = filho.userData?.comodos;
+          filho.visible = Array.isArray(lista) && lista.includes(isolado);
+        }
+      }
+    };
+
     grupoInterior.visible = interior;
     grupoMobilia.visible = interior && mobilia;
     grupoEtiquetas.visible = interior && etiquetas;
+    filtrar(grupoExterior);
+    filtrar(grupoInterior);
+    filtrar(grupoMobilia);
+
     for (const sprite of grupoEtiquetas.children) {
       sprite.visible = !selecionado || sprite.userData.comodoId === selecionado;
     }
