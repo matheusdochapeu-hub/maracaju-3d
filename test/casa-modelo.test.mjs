@@ -49,9 +49,9 @@ test('nenhum cômodo se sobrepõe', () => {
   }
 });
 
-test('as paredes externas fecham o envelope nas quatro laterais', () => {
+test('as paredes externas fecham o envelope e deixam o alpendre totalmente aberto na frente', () => {
   const blocos = redeDeParedes(casa);
-  assert.ok(blocos.length > 60);
+  assert.ok(blocos.length > 50);
   const externas = blocos.filter((b) => b.externa);
   const env = casa.envelope;
 
@@ -61,18 +61,19 @@ test('as paredes externas fecham o envelope nas quatro laterais', () => {
   assert.ok(Math.max(...esquerda.map((b) => b.fim)) >= env.z1 - 0.01);
 
   const frente = externas.filter((b) => b.eixo === 'h' && Math.abs(b.coord - env.z1) < 0.01);
-  assert.ok(frente.some((b) => Math.abs(b.ini - env.x0) < 0.01));
+  // Nenhuma parede ou verga bloqueando a entrada aberta do alpendre (-1.75 a +0.25)
+  const paredeNoAlpendre = frente.find((b) => b.ini < 0.2 && b.fim > -1.7);
+  assert.equal(paredeNoAlpendre, undefined);
+  // Escritório continua fechado até a borda direita
   assert.ok(frente.some((b) => Math.abs(b.fim - env.x1) < 0.01));
 });
 
-test('a passagem do corredor externo para o quintal abre na parede dos fundos', () => {
+test('a passagem do corredor externo para o quintal é totalmente aberta (sem parede nem batente)', () => {
   const blocos = redeDeParedes(casa);
   const env = casa.envelope;
   const fundos = blocos.filter((b) => b.eixo === 'h' && Math.abs(b.coord - env.z0) < 0.01);
-  const verga = fundos.find((b) => b.yBase > 2.5 && b.ini <= -1.65 && b.fim >= -0.35);
-  assert.ok(verga, 'deveria existir abertura livre do corredor externo para os fundos');
-  const paredeNoVao = fundos.find((b) => b.tipo === 'parede' && b.ini < -1.65 && b.fim > -0.35);
-  assert.equal(paredeNoVao, undefined);
+  const bloqueioCorredor = fundos.find((b) => b.ini < -0.3 && b.fim > -1.7);
+  assert.equal(bloqueioCorredor, undefined);
 });
 
 test('muro esquerdo é divisa fechada (sem janelas para rua lateral) e janelas internas abrem para o corredor externo', () => {
@@ -85,11 +86,11 @@ test('muro esquerdo é divisa fechada (sem janelas para rua lateral) e janelas i
   assert.equal(janelasCorredorExt.length, 4); // cozinha, banheiro social rosa, banheiro suíte, quarto do fundo
 });
 
-test('aberturas e relações reais entre cômodos (12 portas/vãos e 5 janelas)', () => {
+test('aberturas e relações reais entre cômodos (9 portas/vãos e 5 janelas)', () => {
   const aberturas = aberturasVisiveis(casa);
   const portas = aberturas.filter((a) => a.tipo === 'porta');
   const janelas = aberturas.filter((a) => a.tipo === 'janela');
-  assert.equal(portas.length, 12);
+  assert.equal(portas.length, 9);
   assert.equal(janelas.length, 5);
   assert.ok(portas.every((p) => p.largura > 0.5));
 
@@ -119,7 +120,7 @@ test('estatísticas refletem a planta real', () => {
   assert.equal(s.largura, 5.2);
   assert.equal(s.comprimento, 19.2);
   assert.equal(s.peDireito, 2.7);
-  assert.equal(s.portas, 12);
+  assert.equal(s.portas, 9);
   assert.equal(s.janelas, 5);
   assert.equal(s.areaComodos, 95);
   assert.equal(s.areaJanelas, 5.04);

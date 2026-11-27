@@ -55,22 +55,10 @@
       "cor": "#86efac",
       "piso": "cimento",
       "status": "medido",
-      "notas": "Área de recuo coberta fora da casa (logo atrás da garagem descoberta). Parede direita é o quarto da frente (escritório).",
+      "notas": "Área de recuo coberta fora da casa (logo atrás da garagem descoberta). Totalmente aberta na frente para a garagem; parede direita é o quarto da frente (escritório).",
       "mobilia": false,
-      "portas": [
-        {
-          "parede": "frente",
-          "inicio": 0.1,
-          "largura": 1.8,
-          "altura": 2.4
-        },
-        {
-          "parede": "fundo",
-          "inicio": 0.1,
-          "largura": 1.4,
-          "altura": 2.4
-        }
-      ],
+      "paredesAbertas": ["frente", "fundo"],
+      "portas": [],
       "janelas": []
     },
     {
@@ -86,6 +74,7 @@
       "status": "medido",
       "notas": "Final do alpendre sentido fundos: duas portas lado a lado — porta da esquerda abre para o corredor externo (muro das plantas) e porta da direita abre para a sala.",
       "mobilia": false,
+      "paredesAbertas": ["frente"],
       "portas": [
         {
           "parede": "fundo",
@@ -147,7 +136,8 @@
           "parede": "fundo",
           "inicio": 2.4,
           "largura": 1.05,
-          "altura": 2.2
+          "altura": 2.2,
+          "vao": true
         }
       ],
       "janelas": [
@@ -277,16 +267,10 @@
       "cor": "#4ade80",
       "piso": "cimento",
       "status": "medido",
-      "notas": "Corredor externo descoberto (1,50 m de largura) margeado pelo muro esquerdo de divisa (sentido Visconde de Taunay — onde vão as plantas). Acessível pela porta esquerda do alpendre e aberto direto para os fundos.",
+      "notas": "Corredor externo descoberto (1,50 m de largura) margeado pelo muro esquerdo de divisa (sentido Visconde de Taunay — onde vão as plantas). Acessível pela porta esquerda do alpendre e totalmente aberto para os fundos.",
       "mobilia": false,
-      "portas": [
-        {
-          "parede": "fundo",
-          "inicio": 0.05,
-          "largura": 1.4,
-          "altura": 2.65
-        }
-      ],
+      "paredesAbertas": ["fundo"],
+      "portas": [],
       "janelas": []
     }
   ]

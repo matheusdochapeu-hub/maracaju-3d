@@ -200,6 +200,7 @@ export function construirCasa(casa) {
 
     // ---- Batentes, esquadrias e vidros ----
     for (const a of aberturasVisiveis(modelo)) {
+      if (a.vao) continue; // vão livre sem batente de porta
       const hHorizontal = a.eixo === 'h';
       const esp = env.espExterna;
       const barra = a.tipo === 'porta' ? MAT.batente : MAT.esquadria;

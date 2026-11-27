@@ -160,6 +160,9 @@ export function normalizarCasa(bruta) {
         notas: String(r.notas || '').slice(0, 500),
         portas: normalizarAberturas(r.portas, false, base.portas),
         janelas: normalizarAberturas(r.janelas, true, base.janelas),
+        paredesAbertas: Array.isArray(r.paredesAbertas)
+          ? [...new Set(r.paredesAbertas.filter((p) => ['frente', 'fundo', 'esquerda', 'direita'].includes(p)))]
+          : [],
         mobilia: typeof r.mobilia === 'boolean' ? r.mobilia : true,
       };
     });
@@ -189,6 +192,7 @@ function normalizarAberturas(lista, ehJanela, padrao) {
         altura: numeroValido(a.altura ?? base.altura, 0.3, 2.8),
         peitoril: ehJanela ? numeroValido(a.peitoril ?? JANELA_PADRAO.peitoril, 0, 2.4) : 0,
         ...(a.externa ? { externa: true } : {}),
+        ...(a.vao ? { vao: true } : {}),
       };
     })
     .slice(0, 8);
@@ -261,10 +265,15 @@ export function redeDeParedes(casa, opcoes = {}) {
   };
 
   for (const room of casa.rooms) {
+    const abertas = new Set(room.paredesAbertas || []);
     for (const parede of ['frente', 'fundo', 'esquerda', 'direita']) {
       const p = paredeDoComodo(room, parede);
       if (!p) continue;
       const aberturas = [];
+      if (abertas.has(parede)) {
+        // Face totalmente aberta (ex.: frente do alpendre, saída do corredor externo, vão livre): sem parede nem verga.
+        aberturas.push({ ini: p.ini, fim: p.fim, peitoril: 0, topo: env.altura + 0.2 });
+      }
       for (const j of room.janelas) {
         if (j.parede !== parede) continue;
         const iv = intervaloAbertura(room, j);
@@ -371,6 +380,7 @@ export function aberturasVisiveis(casa) {
           altura: a.altura,
           peitoril: tipo === 'janelas' ? a.peitoril : 0,
           externa: ehCoordenadaExterna(p.eixo, coord, casa.envelope),
+          vao: Boolean(a.vao),
         });
       }
     }

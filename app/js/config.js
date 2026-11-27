@@ -5,8 +5,8 @@
  * Assim dá para conferir o conteúdo com testes automatizados (test/).
  */
 
-export const VERSAO = '3.1.0';
-export const CHAVE_ESTADO = 'maracaju3d_estado_v5';
+export const VERSAO = '3.1.1';
+export const CHAVE_ESTADO = 'maracaju3d_estado_v6';
 export const CHAVE_ESTADO_ANTIGO = 'maracaju3d_state_v1';
 export const CHAVE_DICAS = 'maracaju3d_dicas_v3';
 
