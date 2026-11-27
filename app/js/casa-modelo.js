@@ -40,6 +40,7 @@ export const JANELA_PADRAO = { largura: 1.2, altura: 1.1, peitoril: 1.0 };
 export const PISOS = {
   porcelanato: { nome: 'Porcelanato claro', cor: 0xd9d2c5, aspereza: 0.35 },
   ceramica: { nome: 'Cerâmica', cor: 0xc4a882, aspereza: 0.5 },
+  ceramica_rosa: { nome: 'Cerâmica rosa', cor: 0xf4a8c7, aspereza: 0.45 },
   madeira: { nome: 'Madeira / laminado', cor: 0xa97448, aspereza: 0.65 },
   cimento: { nome: 'Cimento queimado', cor: 0x9aa0a6, aspereza: 0.8 },
   vinilico: { nome: 'Vinílico', cor: 0xb9c2c9, aspereza: 0.45 },

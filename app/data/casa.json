@@ -1,8 +1,8 @@
 {
-  "versao": 1,
+  "versao": 2,
   "origem": "planta-real",
-  "fonte": "Planta baixa 1:100 (scan da planta, CREA 86538) — casa 88 m², terreno 159,50 m². Recuo frontal 5,00 m. Medidas da planta; conferir no local.",
-  "atualizadoEm": "2026-11-24T19:36:50.746963Z",
+  "fonte": "Planta baixa 1:100 (CREA 86538) conferida com o levantamento real do proprietário — Casa Maracaju 88 (Vila Tibério, Ribeirão Preto/SP).",
+  "atualizadoEm": "2026-11-27T14:20:00.000Z",
   "envelope": {
     "x0": -1.85,
     "x1": 3.35,
@@ -16,7 +16,7 @@
   "rooms": [
     {
       "id": "quarto1",
-      "nome": "Quarto da frente",
+      "nome": "Escritório (Quarto frente)",
       "tipo": "quarto",
       "x": 0.25,
       "z": 3.35,
@@ -25,11 +25,11 @@
       "cor": "#a78bfa",
       "piso": "madeira",
       "status": "medido",
-      "notas": "Quarto da frente. Planta: 3,00 × 4,00 m. Janela na fachada e porta para a sala.",
+      "notas": "Quarto da frente usado como escritório (3,00 × 4,00 m). Parede esquerda faz divisa com o alpendre coberto; janela da frente dá para o canteiro 2×3 m; porta no fundo liga à sala.",
       "portas": [
         {
           "parede": "fundo",
-          "inicio": 2.1,
+          "inicio": 2.0,
           "largura": 0.8,
           "altura": 2.1
         }
@@ -37,7 +37,7 @@
       "janelas": [
         {
           "parede": "frente",
-          "inicio": 1.1,
+          "inicio": 0.9,
           "largura": 1.2,
           "altura": 1.2,
           "peitoril": 1
@@ -46,7 +46,7 @@
     },
     {
       "id": "alpendre",
-      "nome": "Alpendre",
+      "nome": "Alpendre coberto",
       "tipo": "varanda",
       "x": -1.75,
       "z": 3.35,
@@ -55,33 +55,28 @@
       "cor": "#86efac",
       "piso": "cimento",
       "status": "medido",
-      "notas": "Alpendre da frente (planta: 2,00 × 5,00 m). O 1,00 m extra foi modelado como acesso; o canto é chanfrado.",
+      "notas": "Área de recuo coberta fora da casa (logo atrás da garagem descoberta). Parede direita é o quarto da frente (escritório).",
+      "mobilia": false,
       "portas": [
         {
           "parede": "frente",
           "inicio": 0.1,
           "largura": 1.8,
-          "altura": 2.2
-        },
-        {
-          "parede": "esquerda",
-          "inicio": 0.2,
-          "largura": 3.6,
-          "altura": 2.2
+          "altura": 2.4
         },
         {
           "parede": "fundo",
-          "inicio": 0.2,
-          "largura": 1.2,
-          "altura": 2.2
+          "inicio": 0.1,
+          "largura": 1.4,
+          "altura": 2.4
         }
       ],
       "janelas": []
     },
     {
       "id": "alpendre_acesso",
-      "nome": "Acesso",
-      "tipo": "circulacao",
+      "nome": "Final do alpendre",
+      "tipo": "varanda",
       "x": -1.75,
       "z": 2.35,
       "w": 1.5,
@@ -89,8 +84,16 @@
       "cor": "#a3e635",
       "piso": "cimento",
       "status": "medido",
-      "notas": "Trecho coberto entre o alpendre, o corredor e a sala (o 1,00 m que falta no alpendre).",
-      "portas": [],
+      "notas": "Final do alpendre sentido fundos: duas portas lado a lado — porta da esquerda abre para o corredor externo (muro das plantas) e porta da direita abre para a sala.",
+      "mobilia": false,
+      "portas": [
+        {
+          "parede": "fundo",
+          "inicio": 0.2,
+          "largura": 0.9,
+          "altura": 2.1
+        }
+      ],
       "janelas": []
     },
     {
@@ -104,24 +107,18 @@
       "cor": "#38bdf8",
       "piso": "porcelanato",
       "status": "medido",
-      "notas": "Sala. Planta: 3,55 × 4,00 m (modelada 3,50 para fechar o envelope). Porta da varanda e abertura para a cozinha.",
+      "notas": "Sala (3,50 × 4,00 m). Porta da direita no final do alpendre entra aqui; tem ainda porta para o quarto da frente (escritório) e porta para a cozinha.",
       "portas": [
         {
           "parede": "esquerda",
-          "inicio": 3.1,
-          "largura": 0.8,
-          "altura": 2.1
-        },
-        {
-          "parede": "esquerda",
-          "inicio": 0.3,
-          "largura": 0.9,
+          "inicio": 3.05,
+          "largura": 0.85,
           "altura": 2.1
         },
         {
           "parede": "fundo",
-          "inicio": 2.4,
-          "largura": 1,
+          "inicio": 2.35,
+          "largura": 0.9,
           "altura": 2.1
         }
       ],
@@ -138,50 +135,64 @@
       "cor": "#fbbf24",
       "piso": "ceramica",
       "status": "medido",
-      "notas": "Cozinha. Planta: 3,55 × 4,00 m (modelada 3,50). Acesso pelo corredor e pela sala.",
+      "notas": "Cozinha (3,50 × 4,00 m). Tem porta da sala, porta e janela para o corredor externo e abertura larga para o corredor interno que liga o banheiro social rosa e o quarto do fundo.",
       "portas": [
         {
           "parede": "esquerda",
-          "inicio": 0.6,
-          "largura": 0.8,
+          "inicio": 2.45,
+          "largura": 0.85,
           "altura": 2.1
+        },
+        {
+          "parede": "fundo",
+          "inicio": 2.4,
+          "largura": 1.05,
+          "altura": 2.2
         }
       ],
-      "janelas": []
+      "janelas": [
+        {
+          "parede": "esquerda",
+          "inicio": 0.75,
+          "largura": 1.2,
+          "altura": 1.1,
+          "peitoril": 1
+        }
+      ]
     },
     {
       "id": "banheiro",
-      "nome": "Banheiro 1",
+      "nome": "Banheiro social rosa",
       "tipo": "banheiro",
       "x": -0.25,
       "z": -6.15,
       "w": 2.4,
       "d": 1.5,
-      "cor": "#22d3ee",
-      "piso": "ceramica",
+      "cor": "#f472b6",
+      "piso": "ceramica_rosa",
       "status": "medido",
-      "notas": "WC 1. Planta: 2,40 × 1,50 m. Janela alta para o poço de ventilação.",
+      "notas": "Banheiro social rosa (2,40 × 1,50 m). Porta abre para o corredor interno (direita) e janela dá para o corredor externo (esquerda).",
       "portas": [
         {
-          "parede": "esquerda",
-          "inicio": 0.3,
+          "parede": "direita",
+          "inicio": 0.35,
           "largura": 0.7,
           "altura": 2.1
         }
       ],
       "janelas": [
         {
-          "parede": "direita",
+          "parede": "esquerda",
           "inicio": 0.35,
-          "largura": 0.6,
-          "altura": 0.5,
-          "peitoril": 1.6
+          "largura": 0.8,
+          "altura": 0.6,
+          "peitoril": 1.5
         }
       ]
     },
     {
       "id": "banheiro2",
-      "nome": "Banheiro 2",
+      "nome": "Banheiro da suíte",
       "tipo": "banheiro",
       "x": -0.25,
       "z": -7.65,
@@ -190,38 +201,46 @@
       "cor": "#34d399",
       "piso": "ceramica",
       "status": "medido",
-      "notas": "WC 2. Planta: 2,40 × 1,50 m. Confirmar se os dois WCs continuam (planta antiga).",
+      "notas": "Banheiro da suíte (2,40 × 1,50 m), ao lado do banheiro social rosa. Janela dá para o corredor externo (esquerda) e porta abre para dentro do quarto do fundo.",
       "portas": [
         {
-          "parede": "esquerda",
-          "inicio": 0.25,
+          "parede": "fundo",
+          "inicio": 1.45,
           "largura": 0.7,
           "altura": 2.1
         }
       ],
       "janelas": [
         {
-          "parede": "direita",
+          "parede": "esquerda",
           "inicio": 0.35,
-          "largura": 0.6,
-          "altura": 0.5,
-          "peitoril": 1.6
+          "largura": 0.8,
+          "altura": 0.6,
+          "peitoril": 1.5
         }
       ]
     },
     {
-      "id": "poco",
-      "nome": "Poço",
-      "tipo": "servico",
+      "id": "corredor_interno",
+      "nome": "Corredor interno",
+      "tipo": "circulacao",
       "x": 2.15,
       "z": -7.65,
       "w": 1.1,
       "d": 3,
-      "cor": "#64748b",
-      "piso": "cimento",
-      "status": "estimado",
-      "notas": "Faixa de 1,00 m ao lado dos banheiros (planta). Confirmar no local se é poço, armário ou área técnica.",
-      "portas": [],
+      "cor": "#94a3b8",
+      "piso": "ceramica",
+      "status": "medido",
+      "notas": "Corredor interno (1,10 × 3,00 m) ligado à cozinha por abertura larga; dá acesso ao banheiro social rosa e ao quarto do fundo.",
+      "mobilia": false,
+      "portas": [
+        {
+          "parede": "fundo",
+          "inicio": 0.15,
+          "largura": 0.8,
+          "altura": 2.1
+        }
+      ],
       "janelas": []
     },
     {
@@ -235,19 +254,12 @@
       "cor": "#c084fc",
       "piso": "madeira",
       "status": "medido",
-      "notas": "Quarto do fundo. Planta: 3,50 × 4,00 m. Janela no fundo e porta para o corredor.",
-      "portas": [
+      "notas": "Quarto do fundo / suíte (3,50 × 4,00 m). Porta dá para o corredor interno; porta do banheiro da suíte e guarda-roupa embutido ficam na parede com o banheiro da suíte; janela virada para o corredor externo.",
+      "portas": [],
+      "janelas": [
         {
           "parede": "esquerda",
           "inicio": 1.4,
-          "largura": 0.8,
-          "altura": 2.1
-        }
-      ],
-      "janelas": [
-        {
-          "parede": "fundo",
-          "inicio": 1.6,
           "largura": 1.2,
           "altura": 1.1,
           "peitoril": 1
@@ -256,60 +268,26 @@
     },
     {
       "id": "corredor",
-      "nome": "Corredor",
-      "tipo": "circulacao",
+      "nome": "Corredor externo",
+      "tipo": "varanda",
       "x": -1.75,
       "z": -11.65,
       "w": 1.5,
       "d": 14,
-      "cor": "#94a3b8",
-      "piso": "ceramica",
+      "cor": "#4ade80",
+      "piso": "cimento",
       "status": "medido",
-      "notas": "Corredor lateral de 1,50 m, com 4 janelas para a rua lateral e porta para o quintal no fundo.",
+      "notas": "Corredor externo descoberto (1,50 m de largura) margeado pelo muro esquerdo de divisa (sentido Visconde de Taunay — onde vão as plantas). Acessível pela porta esquerda do alpendre e aberto direto para os fundos.",
+      "mobilia": false,
       "portas": [
         {
           "parede": "fundo",
-          "inicio": 0.2,
-          "largura": 1,
-          "altura": 2.1
-        },
-        {
-          "parede": "frente",
-          "inicio": 0.2,
-          "largura": 1.2,
-          "altura": 2.2
+          "inicio": 0.05,
+          "largura": 1.4,
+          "altura": 2.65
         }
       ],
-      "janelas": [
-        {
-          "parede": "esquerda",
-          "inicio": 1.95,
-          "largura": 1.2,
-          "altura": 1.1,
-          "peitoril": 1
-        },
-        {
-          "parede": "esquerda",
-          "inicio": 5.95,
-          "largura": 1.2,
-          "altura": 1.1,
-          "peitoril": 1
-        },
-        {
-          "parede": "esquerda",
-          "inicio": 9.95,
-          "largura": 1.2,
-          "altura": 1.1,
-          "peitoril": 1
-        },
-        {
-          "parede": "esquerda",
-          "inicio": 12.75,
-          "largura": 1.2,
-          "altura": 1.1,
-          "peitoril": 1
-        }
-      ]
+      "janelas": []
     }
   ]
 }

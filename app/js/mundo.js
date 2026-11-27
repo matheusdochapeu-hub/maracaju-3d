@@ -16,15 +16,18 @@ import { getSunPosition, getDaySolarCurve, makeBRTDate, sunToVector3, formatHour
 import { MODULOS } from './config.js';
 import { construirCasa } from './casa-3d.js';
 
-const AZIMUTE_PADRAO = 40;
+const AZIMUTE_PADRAO = 39;
+// Todos os presets abaixo estão no referencial LOCAL do lote:
+// +Z = Frente (Rua Maracaju) | -Z = Fundo (Cap. Pereira Lago)
+// -X = Esquerda (Muro plantas / Visconde de Taunay) | +X = Direita (Vizinha esquina / Machado de Assis)
 const PRESETS = {
-  geral: { pos: [16, 13, 24], alvo: [0, 1.2, -1] },
-  muro: { pos: [6.5, 5.5, 9.0], alvo: [-2.8, 1.0, 1.0] },
-  fundos: { pos: [11, 8, -21], alvo: [0, 1.0, -14.5] },
-  frente: { pos: [-9.5, 6.0, 16.0], alvo: [-1.2, 1.0, 10.2] },
-  topo: { pos: [0.1, 36, -3], alvo: [0, 0, -3] },
-  casa: { pos: [9.0, 18, 9.0], alvo: [0.5, 0.8, -2.15] },
-  planta: { pos: [0.5, 32, -2.15], alvo: [0.5, 0, -2.15] },
+  geral: { pos: [-1.5, 16.5, 24.5], alvo: [0.6, 1.2, -2.0] },
+  frente: { pos: [0.5, 5.4, 19.5], alvo: [0.6, 1.3, 8.2] },
+  muro: { pos: [-0.8, 5.2, 5.5], alvo: [-1.5, 1.1, -5.0] },
+  fundos: { pos: [-6.5, 8.5, -24.5], alvo: [0.8, 1.2, -14.8] },
+  topo: { pos: [0.6, 38.0, 2.5], alvo: [0.6, 0.0, -3.0] },
+  casa: { pos: [-7.5, 18.0, 9.5], alvo: [0.7, 0.8, -2.15] },
+  planta: { pos: [0.7, 32.0, -2.15], alvo: [0.7, 0.0, -2.15] },
 };
 
 export function criarMundo({ obterEstado, obterCasa, aoSelecionarModulo, aoAtualizarSol }) {
@@ -131,24 +134,31 @@ export function criarMundo({ obterEstado, obterCasa, aoSelecionarModulo, aoAtual
     scene.add(rosa);
   }
 
-  function etiquetaTexto(texto, cor = '#ffffff', tamanho = 32, escalaX = 3.4) {
+  function etiquetaTexto(texto, cor = '#ffffff', tamanho = 30, escalaX = 4.2, fundo = null) {
     const c = document.createElement('canvas');
-    c.width = 256;
-    c.height = 80;
+    c.width = 512;
+    c.height = 96;
     const ctx = c.getContext('2d');
+    if (fundo) {
+      ctx.fillStyle = fundo;
+      ctx.beginPath();
+      if (ctx.roundRect) ctx.roundRect(10, 12, 492, 72, 16);
+      else ctx.rect(10, 12, 492, 72);
+      ctx.fill();
+    }
     ctx.font = `bold ${tamanho}px Segoe UI, system-ui, sans-serif`;
     ctx.fillStyle = cor;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(texto, 128, 40);
+    ctx.fillText(texto, 256, 48);
     const textura = new THREE.CanvasTexture(c);
     textura.colorSpace = THREE.SRGBColorSpace;
     const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: textura, transparent: true, depthTest: false }));
-    sprite.scale.set(escalaX, escalaX * 0.31, 1);
+    sprite.scale.set(escalaX, (escalaX * 96) / 512, 1);
     return sprite;
   }
 
-  // ---------- Lote ----------
+  // ---------- Lote (frente real ~5,50 m × 31 m: x = -2,05 a +3,45 | z = -18,55 a +12,45) ----------
   const lote = new THREE.Group();
   scene.add(lote);
   const occludersLote = [];
@@ -170,57 +180,118 @@ export function criarMundo({ obterEstado, obterCasa, aoSelecionarModulo, aoAtual
     return malha;
   }
 
-  caixa(lote, 7.0, 0.08, 31.0, 0, -0.02, -3.05, 0x2c353f, { castShadow: false });
-  caixa(lote, 9.0, 0.06, 3.2, 0, -0.04, 14.2, 0x1b2026, { castShadow: false });
-  const rotuloRua = etiquetaTexto('Rua Maracaju (frente)', '#94a3b8', 26, 5);
-  rotuloRua.position.set(0, 0.4, 14.3);
-  lote.add(rotuloRua);
+  // Piso do terreno (5,50 m largura × 31,0 m profundidade)
+  caixa(lote, 5.5, 0.08, 31.0, 0.7, -0.02, -3.05, 0x2c353f, { castShadow: false });
 
-  // Muros de divisa e muro frontal
-  caixa(lote, 0.16, 2.4, 31.0, -3.45, 1.2, -3.05, 0xb8afa3, { occluder: true });
+  // Rua Maracaju (Frente +Z) + Calçada
+  caixa(lote, 16.0, 0.06, 3.8, 2.2, -0.04, 15.1, 0x1b2026, { castShadow: false });
+  caixa(lote, 16.0, 0.07, 1.0, 2.2, -0.02, 13.0, 0x475569, { castShadow: false });
+
+  // Silhueta translúcida da casa da vizinha de esquina (lado DIREITO +X, sentido Rua Machado de Assis)
+  caixa(lote, 6.2, 3.2, 18.0, 6.8, 1.6, -1.0, 0x334155, {
+    transparent: true,
+    opacity: 0.24,
+    castShadow: true,
+    receiveShadow: false,
+    occluder: true,
+  });
+  const rotVizinha = etiquetaTexto('Vizinha (Esquina)', '#cbd5e1', 26, 4.8, 'rgba(15,23,42,0.75)');
+  rotVizinha.position.set(6.8, 3.7, -1.0);
+  lote.add(rotVizinha);
+
+  // Placas das 4 ruas de referência (tudo dentro do terreno — ruas são só referência cardinal!)
+  const rotRuaFrente = etiquetaTexto('FRENTE: Rua Maracaju', '#f8fafc', 30, 6.2, 'rgba(15,23,42,0.85)');
+  rotRuaFrente.position.set(0.7, 0.65, 15.2);
+  lote.add(rotRuaFrente);
+
+  const rotRuaFundo = etiquetaTexto('FUNDO · Sentido Rua Capitão Pereira Lago', '#38bdf8', 24, 7.6, 'rgba(15,23,42,0.82)');
+  rotRuaFundo.position.set(0.7, 0.9, -20.6);
+  lote.add(rotRuaFundo);
+
+  const rotRuaDir = etiquetaTexto('DIREITA → Sentido Rua Machado de Assis', '#fbbf24', 24, 7.6, 'rgba(15,23,42,0.82)');
+  rotRuaDir.position.set(8.2, 0.9, 10.6);
+  lote.add(rotRuaDir);
+
+  const rotRuaEsq = etiquetaTexto('← ESQUERDA: Muro Plantas (Visconde de Taunay)', '#4ade80', 22, 8.2, 'rgba(15,23,42,0.82)');
+  rotRuaEsq.position.set(-5.8, 0.9, -2.5);
+  lote.add(rotRuaEsq);
+
+  // Muros de divisa (Muro Esquerdo x=-2,00 = plantas; Muro Direito x=+3,45 = divisa vizinha Machado de Assis)
+  caixa(lote, 0.16, 2.4, 31.0, -2.0, 1.2, -3.05, 0xb8afa3, { occluder: true });
   caixa(lote, 0.16, 2.4, 31.0, 3.45, 1.2, -3.05, 0xa89f93, { occluder: true });
-  caixa(lote, 7.0, 2.6, 0.18, 0, 1.3, -18.55, 0xa89f93, { occluder: true });
-  caixa(lote, 7.0, 1.8, 0.15, 0, 0.9, 12.45, 0x64748b, { occluder: true });
+  caixa(lote, 5.5, 2.6, 0.18, 0.72, 1.3, -18.55, 0xa89f93, { occluder: true });
+  // Portão da garagem (esquerda) + mureta/grade frente ao canteiro (direita)
+  caixa(lote, 2.3, 1.85, 0.12, -0.82, 0.92, 12.45, 0x475569, { occluder: true });
+  caixa(lote, 3.1, 1.35, 0.15, 1.9, 0.68, 12.45, 0x64748b, { occluder: true });
 
-  // Canteiro frontal + aceroleira existente
-  caixa(lote, 3.0, 0.18, 2.0, -1.7, 0.09, 10.7, 0x5c3424, { castShadow: false });
+  // Área frontal (z: +7,45 até +12,45 = 5,00 m de recuo):
+  // 1) Garagem DESCOBERTA para 1 carro — LADO ESQUERDO (próximo ao muro esquerdo, sentido Visconde de Taunay)
+  caixa(lote, 2.2, 0.05, 4.9, -0.85, 0.03, 9.95, 0x3b4552, { castShadow: false });
+  const carro = new THREE.Group();
+  caixa(carro, 1.58, 0.56, 3.7, 0, 0.4, 0, 0x64748b, { transparent: true, opacity: 0.42, castShadow: false });
+  caixa(carro, 1.38, 0.46, 1.85, 0, 0.88, -0.15, 0x94a3b8, { transparent: true, opacity: 0.42, castShadow: false });
+  carro.position.set(-0.85, 0, 10.1);
+  lote.add(carro);
+  const rotGaragem = etiquetaTexto('Garagem descoberta (1 carro)', '#cbd5e1', 22, 4.2);
+  rotGaragem.position.set(-0.85, 1.6, 10.1);
+  lote.add(rotGaragem);
+
+  // 2) Canteiro 2 × 3 m — LADO DIREITO da garagem, defronte à janela do Escritório (acerola, lavandas, babosas)
+  caixa(lote, 3.0, 0.18, 2.0, 1.75, 0.09, 10.6, 0x5c3424, { castShadow: false });
   const acerola = new THREE.Mesh(
     new THREE.SphereGeometry(0.55, 14, 14),
     new THREE.MeshStandardMaterial({ color: 0x2e7d32, roughness: 0.9 })
   );
-  acerola.position.set(-2.6, 0.85, 11.1);
+  acerola.position.set(2.55, 0.85, 10.9);
   acerola.castShadow = true;
   lote.add(acerola);
+  caixa(lote, 0.6, 0.32, 0.42, 0.85, 0.34, 11.0, 0x8b5cf6, { castShadow: false }); // lavandas
+  caixa(lote, 0.55, 0.28, 0.42, 1.55, 0.32, 11.05, 0x10b981, { castShadow: false }); // babosas
 
-  // ---------- Telhado da casa ----------
+  // ---------- Telhado da casa (cobre a casa + alpendre; deixa o CORREDOR EXTERNO descoberto!) ----------
   const grupoTelhado = new THREE.Group();
   lote.add(grupoTelhado);
   const telhadoOccluders = [];
   const materialTelha = new THREE.MeshStandardMaterial({ color: 0x8c4a32, roughness: 0.85 });
+
+  // 1) Telhado do corpo principal da casa (x = -0,30 até +3,45 | z = -11,85 até +7,55)
   for (const lado of [-1, 1]) {
-    const agua = new THREE.Mesh(new THREE.BoxGeometry(3.0, 0.14, 19.6), materialTelha);
-    agua.position.set(lado < 0 ? -0.55 : 2.05, 3.42, -2.15);
-    agua.rotation.z = lado < 0 ? 0.26 : -0.26;
+    const agua = new THREE.Mesh(new THREE.BoxGeometry(2.05, 0.14, 19.5), materialTelha);
+    agua.position.set(lado < 0 ? 0.62 : 2.52, 3.32, -2.15);
+    agua.rotation.z = lado < 0 ? 0.22 : -0.22;
     agua.castShadow = true;
     agua.receiveShadow = true;
     agua.userData.sempreOccluder = true;
     grupoTelhado.add(agua);
     telhadoOccluders.push(agua);
   }
+  // 2) Telhado do Alpendre Coberto (x = -1,95 até +0,30 | z = +2,25 até +7,55) — recuo coberto atrás da garagem!
+  const telhaAlpendre = new THREE.Mesh(new THREE.BoxGeometry(2.35, 0.12, 5.3), materialTelha);
+  telhaAlpendre.position.set(-0.82, 3.05, 4.9);
+  telhaAlpendre.rotation.z = 0.14; // queda suave do escritório para o lado esquerdo
+  telhaAlpendre.castShadow = true;
+  telhaAlpendre.receiveShadow = true;
+  telhaAlpendre.userData.sempreOccluder = true;
+  grupoTelhado.add(telhaAlpendre);
+  telhadoOccluders.push(telhaAlpendre);
 
-  // ---------- Cobertura planejada dos fundos ----------
+  // ---------- Cobertura OPCIONAL dos fundos (DESLIGADA por padrão!) ----------
+  // Apoiada no muro DIREITO (+X, divisa Machado de Assis), com QUEDA do telhado sentido ESQUERDO (-X, Visconde de Taunay)
   const grupoCoberturaFundos = new THREE.Group();
   lote.add(grupoCoberturaFundos);
+  // Pilares internos no lado da queda (dentro do terreno!)
   [
-    [-3.2, -12.9],
-    [0.0, -12.9],
-    [3.2, -12.9],
-  ].forEach(([px, pz]) => caixa(grupoCoberturaFundos, 0.12, 2.85, 0.12, px, 1.42, pz, 0x334155));
+    [-0.15, -12.6],
+    [-0.15, -15.4],
+    [-0.15, -18.1],
+  ].forEach(([px, pz]) => caixa(grupoCoberturaFundos, 0.12, 2.7, 0.12, px, 1.35, pz, 0x334155));
+  // Calha na borda esquerda da queda (sentido Visconde de Taunay)
+  caixa(grupoCoberturaFundos, 0.14, 0.12, 5.8, -0.32, 2.66, -15.35, 0x64748b);
 
-  const materialTelhaFundos = new THREE.MeshStandardMaterial({ color: 0xdbeafe, roughness: 0.5, metalness: 0.25 });
-  const telhaFundos = new THREE.Mesh(new THREE.BoxGeometry(6.7, 0.08, 3.4), materialTelhaFundos);
-  telhaFundos.position.set(0, 2.92, -14.5);
-  telhaFundos.rotation.x = -0.06;
+  const materialTelhaFundos = new THREE.MeshStandardMaterial({ color: 0xdbeafe, roughness: 0.48, metalness: 0.25 });
+  const telhaFundos = new THREE.Mesh(new THREE.BoxGeometry(3.85, 0.08, 5.8), materialTelhaFundos);
+  telhaFundos.position.set(1.55, 2.96, -15.35);
+  telhaFundos.rotation.z = 0.14; // mais alto no muro direito (+X Machado de Assis), caindo p/ esquerda (-X Visconde de Taunay)!
   telhaFundos.castShadow = true;
   telhaFundos.receiveShadow = true;
   grupoCoberturaFundos.add(telhaFundos);
@@ -232,9 +303,9 @@ export function criarMundo({ obterEstado, obterCasa, aoSelecionarModulo, aoAtual
     transparent: true,
     opacity: 0.42,
   });
-  const telhaTranslucida = new THREE.Mesh(new THREE.BoxGeometry(6.7, 0.06, 1.0), materialTranslucida);
-  telhaTranslucida.position.set(0, 2.81, -15.9);
-  telhaTranslucida.rotation.x = -0.06;
+  const telhaTranslucida = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.06, 5.8), materialTranslucida);
+  telhaTranslucida.position.set(-0.85, 2.62, -15.35);
+  telhaTranslucida.rotation.z = 0.14;
   grupoCoberturaFundos.add(telhaTranslucida);
 
   // ---------- Casa (paredes, portas, janelas, pisos e móveis) ----------
@@ -481,7 +552,7 @@ export function criarMundo({ obterEstado, obterCasa, aoSelecionarModulo, aoAtual
   }
 
   function occludersVisiveis() {
-    const lista = [...occludersLote];
+    const lista = occludersLote.filter((o) => visivelNaCena(o));
     if (grupoTelhado.visible) lista.push(...telhadoOccluders);
     casa3d.occluders.forEach((o) => {
       if (visivelNaCena(o)) lista.push(o);
@@ -555,14 +626,10 @@ export function criarMundo({ obterEstado, obterCasa, aoSelecionarModulo, aoAtual
   function aplicarPreset(nome) {
     const p = PRESETS[nome];
     if (!p) return;
-    if (nome === 'casa' || nome === 'planta') {
-      const alvo = localParaMundo(p.alvo[0], p.alvo[1], p.alvo[2]);
-      const desloc = new THREE.Vector3(p.pos[0], p.pos[1], p.pos[2]).sub(new THREE.Vector3(p.alvo[0], p.alvo[1], p.alvo[2]));
-      desloc.applyAxisAngle(new THREE.Vector3(0, 1, 0), lote.rotation.y);
-      irPara(alvo.clone().add(desloc), alvo);
-    } else {
-      irPara(new THREE.Vector3(...p.pos), new THREE.Vector3(...p.alvo));
-    }
+    lote.updateMatrixWorld(true);
+    const alvo = localParaMundo(p.alvo[0], p.alvo[1], p.alvo[2]);
+    const pos = localParaMundo(p.pos[0], p.pos[1], p.pos[2]);
+    irPara(pos, alvo);
   }
 
   function focarComodo(id) {
@@ -641,19 +708,15 @@ export function criarMundo({ obterEstado, obterCasa, aoSelecionarModulo, aoAtual
       destaqueAtual = destaque;
     }
 
-    // Cobertura dos fundos
+    // Cobertura dos fundos (encostada no muro direito Machado de Assis -> queda p/ esquerda Visconde de Taunay)
     if (estado.coberturaFundos === 'nenhuma') {
       grupoCoberturaFundos.visible = false;
     } else if (estado.coberturaFundos === 'sanduiche') {
       grupoCoberturaFundos.visible = true;
       telhaTranslucida.visible = false;
-      telhaFundos.scale.z = 1.25;
-      telhaFundos.position.z = -14.9;
     } else {
       grupoCoberturaFundos.visible = true;
       telhaTranslucida.visible = true;
-      telhaFundos.scale.z = 1.0;
-      telhaFundos.position.z = -14.5;
     }
 
     // Módulos
@@ -754,6 +817,7 @@ export function criarMundo({ obterEstado, obterCasa, aoSelecionarModulo, aoAtual
   }
 
   atualizarTudo();
+  aplicarPreset('geral');
 
   return {
     three: { scene, camera, controls, renderer },

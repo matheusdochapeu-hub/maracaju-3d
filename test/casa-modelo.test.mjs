@@ -65,31 +65,43 @@ test('as paredes externas fecham o envelope nas quatro laterais', () => {
   assert.ok(frente.some((b) => Math.abs(b.fim - env.x1) < 0.01));
 });
 
-test('a porta do corredor para o quintal vira verga na parede dos fundos', () => {
+test('a passagem do corredor externo para o quintal abre na parede dos fundos', () => {
   const blocos = redeDeParedes(casa);
   const env = casa.envelope;
   const fundos = blocos.filter((b) => b.eixo === 'h' && Math.abs(b.coord - env.z0) < 0.01);
-  const verga = fundos.find((b) => b.yBase > 2 && b.ini <= -1.54 && b.fim >= -0.56);
-  assert.ok(verga, 'deveria existir verga sobre a porta do corredor');
-  const paredeNoVao = fundos.find((b) => b.tipo === 'parede' && b.ini < -1.54 && b.fim > -0.56);
+  const verga = fundos.find((b) => b.yBase > 2.5 && b.ini <= -1.65 && b.fim >= -0.35);
+  assert.ok(verga, 'deveria existir abertura livre do corredor externo para os fundos');
+  const paredeNoVao = fundos.find((b) => b.tipo === 'parede' && b.ini < -1.65 && b.fim > -0.35);
   assert.equal(paredeNoVao, undefined);
 });
 
-test('janelas do corredor deixam peitoril e verga', () => {
-  const blocos = redeDeParedes(casa);
+test('muro esquerdo é divisa fechada (sem janelas para rua lateral) e janelas internas abrem para o corredor externo', () => {
+  const aberturas = aberturasVisiveis(casa);
   const env = casa.envelope;
-  const esquerda = blocos.filter((b) => b.eixo === 'v' && Math.abs(b.coord - env.x0) < 0.01);
-  assert.ok(esquerda.some((b) => b.tipo === 'peitoril' && b.yTopo <= 1.1));
-  assert.ok(esquerda.some((b) => b.tipo === 'verga' && b.yBase >= 2.0));
+  const janelasMuroEsq = aberturas.filter((a) => a.tipo === 'janela' && a.eixo === 'v' && Math.abs(a.coord - env.x0) < 0.05);
+  assert.equal(janelasMuroEsq.length, 0);
+
+  const janelasCorredorExt = aberturas.filter((a) => a.tipo === 'janela' && a.eixo === 'v' && Math.abs(a.coord - -0.25) < 0.05);
+  assert.equal(janelasCorredorExt.length, 4); // cozinha, banheiro social rosa, banheiro suíte, quarto do fundo
 });
 
-test('aberturas: 13 portas e 8 janelas', () => {
+test('aberturas e relações reais entre cômodos (12 portas/vãos e 5 janelas)', () => {
   const aberturas = aberturasVisiveis(casa);
   const portas = aberturas.filter((a) => a.tipo === 'porta');
   const janelas = aberturas.filter((a) => a.tipo === 'janela');
-  assert.equal(portas.length, 13);
-  assert.equal(janelas.length, 8);
+  assert.equal(portas.length, 12);
+  assert.equal(janelas.length, 5);
   assert.ok(portas.every((p) => p.largura > 0.5));
+
+  // Banheiro social rosa abre para o corredor interno (direita)
+  const bSocial = casa.rooms.find((r) => r.id === 'banheiro');
+  assert.equal(bSocial.portas[0].parede, 'direita');
+  assert.equal(bSocial.janelas[0].parede, 'esquerda');
+
+  // Banheiro da suíte abre para o quarto do fundo (fundo)
+  const bSuite = casa.rooms.find((r) => r.id === 'banheiro2');
+  assert.equal(bSuite.portas[0].parede, 'fundo');
+  assert.equal(bSuite.janelas[0].parede, 'esquerda');
 });
 
 test('completude sobe conforme o cômodo é levantado', () => {
@@ -107,17 +119,16 @@ test('estatísticas refletem a planta real', () => {
   assert.equal(s.largura, 5.2);
   assert.equal(s.comprimento, 19.2);
   assert.equal(s.peDireito, 2.7);
-  assert.equal(s.portas, 13);
-  assert.equal(s.janelas, 8);
+  assert.equal(s.portas, 12);
+  assert.equal(s.janelas, 5);
   assert.equal(s.areaComodos, 95);
-  assert.equal(s.areaJanelas, 8.64);
+  assert.equal(s.areaJanelas, 5.04);
   assert.ok(s.ocupacao > 90 && s.ocupacao <= 100);
 });
 
 test('pendências apontam o que fazer e para qual cômodo', () => {
   const lista = pendencias(casa, {});
   assert.ok(lista.length >= 6);
-  assert.ok(lista.some((p) => p.acao === 'medir'));
   assert.ok(lista.some((p) => p.acao === 'captura'));
 });
 

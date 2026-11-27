@@ -102,6 +102,17 @@ function moveisDoComodo(room, grupoMobilia) {
     add(0.55, 0.36, 0.55, 1.75, 0.18, d * 0.45, MAT.madeira); // mesa de centro
     add(0.35, 0.5, 1.1, w - 0.25, 0.25, d * 0.78, MAT.madeira); // rack da TV
     add(0.06, 0.62, 1.0, w - 0.08, 1.15, d * 0.78, MAT.eletro); // TV
+  } else if (tipo === 'quarto' && room.id === 'quarto1') {
+    // Quarto da frente = Escritório
+    add(1.5, 0.75, 0.65, w * 0.5, 0.38, d - 0.55, MAT.madeira); // escrivaninha perto da janela
+    add(0.55, 0.48, 0.55, w * 0.5, 0.24, d - 1.25, MAT.mover); // cadeira
+    add(0.42, 1.85, 1.4, w - 0.26, 0.93, d * 0.4, MAT.madeira); // estante
+  } else if (tipo === 'quarto' && room.id === 'quarto2') {
+    // Quarto do fundo: guarda-roupa embutido na parede com o banheiro da suíte (frente esquerda)
+    add(1.35, 2.25, 0.58, 0.72, 1.13, d - 0.34, MAT.madeira); // guarda-roupa embutido!
+    add(1.45, 0.45, 1.9, w - 1.05, 0.24, 1.15, MAT.mover); // cama
+    add(1.45, 0.08, 1.9, w - 1.05, 0.5, 1.15, MAT.louca); // colchão
+    add(1.45, 0.7, 0.08, w - 1.05, 0.35, 0.16, MAT.madeira); // cabeceira
   } else if (tipo === 'quarto') {
     add(1.4, 0.45, 1.9, 0.85, 0.24, 1.1, MAT.mover); // cama
     add(1.4, 0.08, 1.9, 0.85, 0.5, 1.1, MAT.louca); // colchão

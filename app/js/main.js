@@ -56,9 +56,9 @@ function estadoPadrao() {
     lotAzimuth: SITE.azimuteLote,
     data: '2026-06-21',
     hora: 9.5,
-    coberturaFundos: 'mista',
+    coberturaFundos: 'nenhuma',
     raioX: false,
-    satelite: true,
+    satelite: false,
     mobilia: true,
     etiquetas: true,
     moduloSelecionado: 'horta_15m',
@@ -420,6 +420,7 @@ const inputLng = document.getElementById('inputLng');
 const inputAzimute = document.getElementById('inputAzimute');
 const lblAzimute = document.getElementById('lblAzimute');
 const selectCobertura = document.getElementById('selectCobertura');
+const btnToggleCobertura = document.getElementById('btnToggleCobertura');
 const checkSatelite = document.getElementById('checkSatelite');
 
 function sincronizarTerreno() {
@@ -428,6 +429,13 @@ function sincronizarTerreno() {
   inputAzimute.value = String(estado.lotAzimuth);
   lblAzimute.textContent = `${estado.lotAzimuth}°`;
   selectCobertura.value = estado.coberturaFundos;
+  if (btnToggleCobertura) {
+    const ativa = estado.coberturaFundos !== 'nenhuma';
+    btnToggleCobertura.textContent = ativa
+      ? '🏗️ Cobertura dos fundos: Ativa (tirar)'
+      : '🏗️ Cobertura dos fundos: Sem cobertura (adicionar)';
+    btnToggleCobertura.classList.toggle('ativo', ativa);
+  }
   if (checkSatelite) checkSatelite.checked = estado.satelite;
 }
 
@@ -449,8 +457,20 @@ inputAzimute.addEventListener('input', () => {
 });
 selectCobertura.addEventListener('change', () => {
   estado.coberturaFundos = selectCobertura.value;
+  sincronizarTerreno();
   salvar();
   atualizarTudo();
+});
+btnToggleCobertura?.addEventListener('click', () => {
+  estado.coberturaFundos = estado.coberturaFundos === 'nenhuma' ? 'sanduiche' : 'nenhuma';
+  sincronizarTerreno();
+  salvar();
+  atualizarTudo();
+  mostrarToast(
+    estado.coberturaFundos === 'nenhuma'
+      ? 'Cobertura dos fundos removida (estado atual).'
+      : 'Cobertura dos fundos adicionada (muro dir. → queda sentido Visconde de Taunay).'
+  );
 });
 
 document.getElementById('btnGps').addEventListener('click', () => {
