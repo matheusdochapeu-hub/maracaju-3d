@@ -707,6 +707,7 @@ export function criarMundo({ obterEstado, obterCasa, aoSelecionarModulo, aoAtual
       etiquetas: mostrarInterior && estado.etiquetas !== false && estado.modo !== 'passeio',
       selecionado: estado.comodoSelecionado,
       isolar: isolando,
+      paredes: vistaInterior ? estado.modoParedes || 'inteiras' : 'inteiras',
     });
     const destaque = mostrarInterior ? estado.comodoSelecionado : null;
     if (destaque !== destaqueAtual) {

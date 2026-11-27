@@ -30,6 +30,8 @@ export function iniciarInteriores(ctx) {
   const elBtnEditar = document.getElementById('btnPlantaEditar');
   const elBtnIsolar = document.getElementById('btnIsolarComodo');
   const elBtnIsolarHud = document.getElementById('btnIsolarComodoHud');
+  const elBtnParedes = document.getElementById('btnModoParedes');
+  const elBtnParedesHud = document.getElementById('btnParedesHud');
   const canvas3d = document.getElementById('canvas3d');
 
   // Planta de fundo (imagem da planta real por baixo dos cômodos)
@@ -1090,13 +1092,42 @@ export function iniciarInteriores(ctx) {
     const ativo = Boolean(estado.isolarComodo);
     if (elBtnIsolar) {
       elBtnIsolar.classList.toggle('ativo', ativo);
-      elBtnIsolar.textContent = ativo ? '✓ Vendo só este cômodo (mostrar todos)' : '🔍 Ver só este cômodo';
+      elBtnIsolar.textContent = ativo ? '✓ Só este cômodo' : '🔍 Só este cômodo';
     }
     if (elBtnIsolarHud) {
       elBtnIsolarHud.classList.toggle('ativo', ativo);
       elBtnIsolarHud.textContent = ativo ? '✓ Só este cômodo' : '🔍 Só este cômodo';
     }
+    const mp = estado.modoParedes || 'inteiras';
+    const rotuloLateral = mp === 'ocultas' ? '🧱 Sem paredes' : mp === 'baixas' ? '🧱 Paredes baixas' : '🧱 Paredes: Inteiras';
+    const rotuloHud = mp === 'ocultas' ? '🧱 Sem paredes' : mp === 'baixas' ? '🧱 Paredes baixas' : '🧱 Paredes';
+    if (elBtnParedes) {
+      elBtnParedes.classList.toggle('ativo', mp !== 'inteiras');
+      elBtnParedes.textContent = rotuloLateral;
+    }
+    if (elBtnParedesHud) {
+      elBtnParedesHud.classList.toggle('ativo', mp !== 'inteiras');
+      elBtnParedesHud.textContent = rotuloHud;
+    }
   }
+
+  function alternarModoParedes() {
+    const ordem = ['inteiras', 'baixas', 'ocultas'];
+    const atual = ordem.indexOf(estado.modoParedes || 'inteiras');
+    estado.modoParedes = ordem[(atual + 1) % ordem.length];
+    sincronizarBotaoIsolar();
+    salvar();
+    ctx.atualizarTudo();
+    const msgs = {
+      inteiras: 'Paredes inteiras (altura real).',
+      baixas: 'Paredes baixas (~40 cm — visão de corte para dispor móveis).',
+      ocultas: 'Paredes ocultas (apenas piso, contorno e móveis).',
+    };
+    toast(msgs[estado.modoParedes]);
+  }
+
+  elBtnParedes?.addEventListener('click', alternarModoParedes);
+  elBtnParedesHud?.addEventListener('click', alternarModoParedes);
 
   function alternarIsolarComodo() {
     estado.isolarComodo = !estado.isolarComodo;

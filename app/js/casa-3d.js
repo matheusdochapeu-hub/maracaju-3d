@@ -217,6 +217,7 @@ export function construirCasa(casa) {
         malha.receiveShadow = true;
       }
       malha.userData.comodos = [room.id];
+      malha.userData.papel = 'piso';
       centroDosComodos[room.id] = { x: room.x + room.w / 2, z: room.z + room.d / 2 };
     }
 
@@ -258,6 +259,9 @@ export function construirCasa(casa) {
         }
       }
       malha.userData.comodos = b.comodos?.length ? b.comodos : comodosDaAbertura(b, modelo.rooms);
+      malha.userData.papel = 'parede';
+      malha.userData.tipoBloco = b.tipo;
+      malha.userData.origY = malha.position.y;
       occluders.push(malha);
     }
 
@@ -278,6 +282,7 @@ export function construirCasa(casa) {
         grupoDiag.position.set((a.x1 + a.x2) / 2, 0, (a.z1 + a.z2) / 2);
         grupoDiag.rotation.y = rotY;
         grupoDiag.userData.comodos = comodosAbertura;
+        grupoDiag.userData.papel = 'abertura';
         caixa(grupoDiag, 0.05, alt, esp + 0.04, -larg / 2 + 0.025, yCentro, 0, barra);
         caixa(grupoDiag, 0.05, alt, esp + 0.04, larg / 2 - 0.025, yCentro, 0, barra);
         caixa(grupoDiag, larg, 0.05, esp + 0.04, 0, peitoril + alt - 0.025, 0, barra);
@@ -288,6 +293,7 @@ export function construirCasa(casa) {
       const hHorizontal = a.eixo === 'h';
       const grupoAb = new THREE.Group();
       grupoAb.userData.comodos = comodosAbertura;
+      grupoAb.userData.papel = 'abertura';
       const criarBarra = (bw, bh, bd, dx, dy, dz) => {
         if (hHorizontal) caixa(grupoAb, bw, bh, bd, a.ini + larg / 2 + dx, dy, a.coord + dz, barra);
         else caixa(grupoAb, bd, bh, bw, a.coord + dz, dy, a.ini + larg / 2 + dx, barra);
@@ -321,9 +327,13 @@ export function construirCasa(casa) {
         const zFace = zFrente - prof; // face frontal alinhada do L + guarda-roupa de concreto
         const grupoL = new THREE.Group();
         grupoL.userData.comodos = ['quarto2', 'banheiro2'];
+        grupoL.userData.papel = 'embutido';
+        grupoL.userData.origY = 0;
         const matPisoBanho = new THREE.MeshStandardMaterial({ color: PISOS.ceramica.cor, roughness: 0.5 });
         matPisoBanho.userData.proprio = true;
-        caixa(grupoL, largL, 0.045, prof, room.x + largL / 2, 0.025, zFrente - prof / 2, matPisoBanho, false);
+        const pisoL = caixa(grupoInterior, largL, 0.045, prof, room.x + largL / 2, 0.025, zFrente - prof / 2, matPisoBanho, false);
+        pisoL.userData.comodos = ['quarto2', 'banheiro2'];
+        pisoL.userData.papel = 'piso';
 
         const divL = caixa(grupoL, 0.12, alt, prof, room.x + largL, alt / 2, zFrente - prof / 2, MAT.interna);
         occluders.push(divL);
@@ -345,6 +355,8 @@ export function construirCasa(casa) {
         const xCentroGR = xIniGR + largGR / 2;
         const grupoGR2 = new THREE.Group();
         grupoGR2.userData.comodos = ['quarto2'];
+        grupoGR2.userData.papel = 'embutido';
+        grupoGR2.userData.origY = 0;
         const grConcreto = caixa(grupoGR2, largGR, alt, prof, xCentroGR, alt / 2, zFrente - prof / 2, MAT.interna);
         occluders.push(grConcreto);
         colisores.push({ x0: xIniGR, x1: xIniGR + largGR, z0: zFace, z1: zFrente });
@@ -357,6 +369,8 @@ export function construirCasa(casa) {
         const zCentroGR = room.z + prof / 2;
         const grupoGR1 = new THREE.Group();
         grupoGR1.userData.comodos = ['quarto1'];
+        grupoGR1.userData.papel = 'embutido';
+        grupoGR1.userData.origY = 0;
         const grConcreto = caixa(grupoGR1, largGR, alt, prof, xCentroGR, alt / 2, zCentroGR, MAT.interna);
         occluders.push(grConcreto);
         colisores.push({ x0: room.x + 0.04, x1: room.x + 0.04 + largGR, z0: room.z, z1: room.z + prof });
@@ -421,15 +435,45 @@ export function construirCasa(casa) {
     grupoDestaque.add(linha);
   }
 
-  function definirVisibilidade({ interior = true, mobilia = true, etiquetas = true, selecionado = null, isolar = false } = {}) {
+  function definirVisibilidade({ interior = true, mobilia = true, etiquetas = true, selecionado = null, isolar = false, paredes = 'inteiras' } = {}) {
     const isolado = isolar && selecionado ? selecionado : null;
-    const filtrar = (grupo) => {
+    const modoParedes = paredes === false ? 'ocultas' : paredes === 'baixas' || paredes === 'ocultas' ? paredes : 'inteiras';
+
+    const aplicarNosFilhos = (grupo) => {
       for (const filho of grupo.children) {
-        if (!isolado) {
+        const lista = filho.userData?.comodos;
+        const passaIsolado = !isolado || (Array.isArray(lista) && lista.includes(isolado));
+        if (!passaIsolado) {
+          filho.visible = false;
+          continue;
+        }
+        const papel = filho.userData?.papel;
+        if (papel === 'piso' || !papel) {
           filho.visible = true;
-        } else {
-          const lista = filho.userData?.comodos;
-          filho.visible = Array.isArray(lista) && lista.includes(isolado);
+          continue;
+        }
+        if (modoParedes === 'ocultas') {
+          filho.visible = false;
+          continue;
+        }
+        if (modoParedes === 'baixas') {
+          if (papel === 'abertura' || filho.userData?.tipoBloco === 'verga') {
+            filho.visible = false;
+          } else {
+            filho.visible = true;
+            const fator = 0.14;
+            filho.scale.y = fator;
+            if (typeof filho.userData?.origY === 'number') {
+              filho.position.y = filho.userData.origY * fator;
+            }
+          }
+          continue;
+        }
+        // modoParedes === 'inteiras'
+        filho.visible = true;
+        filho.scale.y = 1;
+        if (typeof filho.userData?.origY === 'number') {
+          filho.position.y = filho.userData.origY;
         }
       }
     };
@@ -437,9 +481,9 @@ export function construirCasa(casa) {
     grupoInterior.visible = interior;
     grupoMobilia.visible = interior && mobilia;
     grupoEtiquetas.visible = interior && etiquetas;
-    filtrar(grupoExterior);
-    filtrar(grupoInterior);
-    filtrar(grupoMobilia);
+    aplicarNosFilhos(grupoExterior);
+    aplicarNosFilhos(grupoInterior);
+    aplicarNosFilhos(grupoMobilia);
 
     for (const sprite of grupoEtiquetas.children) {
       sprite.visible = !selecionado || sprite.userData.comodoId === selecionado;
